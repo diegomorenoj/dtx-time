@@ -1,92 +1,249 @@
-# FRONTEND-DTX
+# [Vuetify Material Dashboard PRO](https://store.vuetifyjs.com/products/vuetify-material-dashboard-free)
 
+![version](https://img.shields.io/badge/version-1.2.0-blue.svg)[![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.com/invite/s93b7Fv)
 
+![Product Gif](https://cdn.shopify.com/s/files/1/2695/0984/products/screen1_c85e2d5f-c56e-42a2-8361-47d8cc853fce.png?v=1605990715)
 
-## Getting started
+**Vuetify Material Dashboard PRO** is a beautiful resource built over [Vuetify](https://vuetifyjs.com/en/), [Vuex](https://vuex.vuejs.org/installation.html) and [Vuejs](https://vuejs.org/). It will help you get started and quickly developing dashboards in no time. Using the Dashboard is pretty simple but requires basic knowledge of Javascript, [Vuejs](https://vuejs.org/v2/guide/) and [Vue-Router](https://router.vuejs.org/en/).
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Getting Started
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Install Nodejs from the official [Nodejs page](https://nodejs.org/en/)
+- Install yarn from the official [Yarn installation page](https://classic.yarnpkg.com/en/docs/install/#windows-stable).
+- Open your terminal
+- Navigate to the project
+- Run `yarn install`
+- Run `yarn serve` to start a local development server
+- A new tab will be opened in your browser
 
-## Add your files
+You can also run additional tasks such as
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- `yarn run build` to build your app for production
+- `yarn run lint` to run linting.
 
+## Vuetify
+
+Vuetify is an Open Source UI Library that is developed exactly according to Material Design spec. Every component is handcrafted to bring you the best possible UI tools to your next great app. The development doesn't stop at the core components outlined in Google's spec. Through the support of community members and sponsors, additional components will be designed and made available for everyone to enjoy.
+
+## Vuex
+
+Vuex is a state management pattern + library for Vue.js applications. It serves as a centralized store for all the components in an application, with rules ensuring that the state can only be mutated in a predictable fashion. It also integrates with Vue's official [devtools](https://github.com/vuejs/vue-devtools) extension to provide advanced features such as zero-config time-travel debugging and state snapshot export / import.
+
+## Vue-cli
+
+We used the latest 3.x [Vue CLI](https://github.com/vuejs/vue-cli) which aims to reduce project configuration
+to as little as possible. Almost everything is inside `package.json` + some other related files such as
+`.babel.config.js`, `.eslintrc.js` and `.postcssrc.js`.
+
+Let us know what you think and what we can improve below. And good luck with development!
+
+## Table of Contents
+
+- [Demo](#demo)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [File Structure](#file-structure)
+- [Browser Support](#browser-support)
+- [Resources](#resources)
+- [Reporting Issues](#reporting-issues)
+- [Technical Support or Questions](#technical-support-or-questions)
+- [Licensing](#licensing)
+- [Useful Links](#useful-links)
+
+## Demo
+
+- [Start page](https://vuetify-material-dashboard.vuetifyjs.com/)
+- [Icons page](https://vuetify-material-dashboard.vuetifyjs.com/components/icons/)
+- [Notifications page](https://vuetify-material-dashboard.vuetifyjs.com/components/notifications/)
+
+[View More](https://vuetify-material-dashboard.vuetifyjs.com/)
+
+## Quick start
+
+Quick start options:
+
+- Download from [Vuetify](https://store.vuetifyjs.com/products/vuetify-material-dashboard-pro)
+
+## Documentation
+
+The documentation for **Vuetify Material Dashboard PRO** is hosted [here](https://vuetifyjs.com/).
+
+## File Structure
+
+Within the download you'll find the following directories and files:
+
+<details>
+
+```txt
+vuetify-material-dashboard/
+┣ public/
+┃ ┣ android-chrome-192x192.png
+┃ ┣ android-chrome-512x512.png
+┃ ┣ apple-touch-icon.png
+┃ ┣ favicon-16x16.png
+┃ ┣ favicon-32x32.png
+┃ ┣ favicon.ico
+┃ ┣ index.html
+┃ ┣ robots.txt
+┃ ┗ site.webmanifest
+┣ src/
+┃ ┣ assets/
+┃ ┃ ┣ clint-mckoy.jpg
+┃ ┃ ┣ lock.jpg
+┃ ┃ ┣ login.jpg
+┃ ┃ ┣ logo.png
+┃ ┃ ┣ pricing.jpg
+┃ ┃ ┣ register.jpg
+┃ ┃ ┣ vmd.svg
+┃ ┃ ┗ vuetify.svg
+┃ ┣ components/
+┃ ┃ ┣ app/
+┃ ┃ ┃ ┣ BarItem.vue
+┃ ┃ ┃ ┣ Btn.vue
+┃ ┃ ┃ ┣ Card.vue
+┃ ┃ ┃ ┗ Tabs.vue
+┃ ┃ ┣ Links.vue
+┃ ┃ ┣ MaterialAlert.vue
+┃ ┃ ┣ MaterialCard.vue
+┃ ┃ ┣ MaterialChartCard.vue
+┃ ┃ ┣ MaterialDropdown.vue
+┃ ┃ ┣ MaterialRevealCard.vue
+┃ ┃ ┣ MaterialSnackbar.vue
+┃ ┃ ┣ MaterialStatsCard.vue
+┃ ┃ ┣ MaterialWizard.vue
+┃ ┃ ┣ PlanCard.vue
+┃ ┃ ┣ TestimonyCard.vue
+┃ ┃ ┗ ViewIntro.vue
+┃ ┣ i18n/
+┃ ┃ ┣ messages/
+┃ ┃ ┃ ┣ ar.json
+┃ ┃ ┃ ┗ en.json
+┃ ┃ ┗ index.js
+┃ ┣ layouts/
+┃ ┃ ┣ default/
+┃ ┃ ┃ ┣ widgets/
+┃ ┃ ┃ ┃ ┣ Account.vue
+┃ ┃ ┃ ┃ ┣ AccountSettings.vue
+┃ ┃ ┃ ┃ ┣ DrawerHeader.vue
+┃ ┃ ┃ ┃ ┣ DrawerToggle.vue
+┃ ┃ ┃ ┃ ┣ GoHome.vue
+┃ ┃ ┃ ┃ ┣ Notifications.vue
+┃ ┃ ┃ ┃ ┗ Search.vue
+┃ ┃ ┃ ┣ AppBar.vue
+┃ ┃ ┃ ┣ Drawer.vue
+┃ ┃ ┃ ┣ Footer.vue
+┃ ┃ ┃ ┣ Index.vue
+┃ ┃ ┃ ┣ List.vue
+┃ ┃ ┃ ┣ ListGroup.vue
+┃ ┃ ┃ ┣ ListItem.vue
+┃ ┃ ┃ ┣ Settings.vue
+┃ ┃ ┃ ┗ View.vue
+┃ ┃ ┗ page/
+┃ ┃   ┣ AppBar.vue
+┃ ┃   ┣ Footer.vue
+┃ ┃   ┣ Index.vue
+┃ ┃   ┗ View.vue
+┃ ┣ plugins/
+┃ ┃ ┣ app.js
+┃ ┃ ┣ chartist.js
+┃ ┃ ┣ index.js
+┃ ┃ ┣ vee-validate.js
+┃ ┃ ┣ vue-meta.js
+┃ ┃ ┣ vue-world-map.js
+┃ ┃ ┣ vuetify.js
+┃ ┃ ┣ vuex-pathify.js
+┃ ┃ ┣ webfontloader.js
+┃ ┃ ┗ world-map-vue.js
+┃ ┣ router/
+┃ ┃ ┗ index.js
+┃ ┣ store/
+┃ ┃ ┣ modules/
+┃ ┃ ┃ ┣ app.js
+┃ ┃ ┃ ┣ index.js
+┃ ┃ ┃ ┣ sales.js
+┃ ┃ ┃ ┗ user.js
+┃ ┃ ┗ index.js
+┃ ┣ styles/
+┃ ┃ ┣ overrides.sass
+┃ ┃ ┗ variables.scss
+┃ ┣ util/
+┃ ┃ ┣ globals.js
+┃ ┃ ┣ helpers.js
+┃ ┃ ┗ routes.js
+┃ ┣ views/
+┃ ┃ ┣ Buttons.vue
+┃ ┃ ┣ Calendar.vue
+┃ ┃ ┣ Charts.vue
+┃ ┃ ┣ Dashboard.vue
+┃ ┃ ┣ DataTables.vue
+┃ ┃ ┣ Error.vue
+┃ ┃ ┣ ExtendedForms.vue
+┃ ┃ ┣ ExtendedTables.vue
+┃ ┃ ┣ FullscreenMap.vue
+┃ ┃ ┣ GoogleMaps.vue
+┃ ┃ ┣ Grid.vue
+┃ ┃ ┣ Icons.vue
+┃ ┃ ┣ Lock.vue
+┃ ┃ ┣ Login.vue
+┃ ┃ ┣ Notifications.vue
+┃ ┃ ┣ Pricing.vue
+┃ ┃ ┣ Register.vue
+┃ ┃ ┣ RegularForms.vue
+┃ ┃ ┣ RegularTables.vue
+┃ ┃ ┣ Rtl.vue
+┃ ┃ ┣ Tabs.vue
+┃ ┃ ┣ Timeline.vue
+┃ ┃ ┣ Typography.vue
+┃ ┃ ┣ UserProfile.vue
+┃ ┃ ┣ ValidationForms.vue
+┃ ┃ ┣ Widgets.vue
+┃ ┃ ┗ Wizard.vue
+┃ ┣ App.vue
+┃ ┗ main.js
+┣ .browserslistrc
+┣ .editorconfig
+┣ .env.local
+┣ .eslintrc.js
+┣ .gitignore
+┣ README.md
+┣ babel.config.js
+┣ package.json
+┣ vue.config.js
+┗ yarn.lock
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/dtx-time-2024/frontend-dtx.git
-git branch -M main
-git push -uf origin main
-```
 
-## Integrate with your tools
+</details>
 
-- [ ] [Set up project integrations](https://gitlab.com/dtx-time-2024/frontend-dtx/-/settings/integrations)
+## Browser Support
 
-## Collaborate with your team
+Vuetify Material Dashboard aims to support the last two versions of the following browsers:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Resources
 
-## Test and Deploy
+- [Live Preview](https://vuetify-material-dashboard.vuetifyjs.com/)
+- Product Page: [Product](https://store.vuetifyjs.com/products/vuetify-material-dashboard-pro)
+- Documentation is [Here](https://vuetifyjs.com/)
+- License Agreement: [License](https://store.vuetifyjs.com/licenses)
+- Contact: [Contact](https://store.vuetifyjs.com/contact-us)
+- Issues: [Github Issues Page](https://github.com/vuetifyjs/premium-theme-issues)
 
-Use the built-in continuous integration in GitLab.
+## Reporting Issues
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+We use GitHub Issues as the official bug tracker for the **Vuetify Material Dashboard** theme. Here is some advice for our users that want to report an issue:
 
-***
+1. Providing us reproducible steps for the issue will shorten the time it takes for it to be fixed.
+2. Some issues may be browser specific, so specifying in what browser you encountered the issue might help.
 
-# Editing this README
+## Technical Support or Questions
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+If you have questions or need help integrating the product please reach out in [Discord](https://discord.com/invite/s93b7Fv) or file an issue [here](https://github.com/vuetifyjs/premium-theme-issues).
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## Licensing
 
-## Name
-Choose a self-explaining name for your project.
+## Useful Links
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- [Documentation](https://vuetifyjs.com/)
+- [Vuetify Store](https://store.vuetifyjs.com/)
+- [Free Vuetify Themes](https://store.vuetifyjs.com/collections/free-products)
+- [Discord](https://discord.com/invite/s93b7Fv)
+- [Twitter](https://twitter.com/vuetifyjs)
