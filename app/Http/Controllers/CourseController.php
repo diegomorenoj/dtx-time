@@ -243,7 +243,7 @@ class CourseController extends Controller
                             SELECT 
                                 (c.id + 999) AS id
                                 , c.id AS code
-                                , c.fullname AS name
+                                , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS name
                                 , c.shortname
                                 , cc.name AS category
                                 ,(SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
@@ -304,7 +304,7 @@ class CourseController extends Controller
                             SELECT 
                                 (c.id + 999) AS id
                                 , c.id AS code
-                                , c.fullname AS name
+                                , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS name
                                 , c.shortname
                                 , cc.name AS category
                                 ,(SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
@@ -367,7 +367,7 @@ class CourseController extends Controller
                             SELECT 
                                 (c.id + 999) AS id
                                 , c.id AS code
-                                , c.fullname AS name
+                                , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS name
                                 , c.shortname
                                 , cc.name AS category
                                 , (SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
@@ -427,7 +427,7 @@ class CourseController extends Controller
                             SELECT 
                                 (c.id + 999) AS id
                                 , c.id AS code
-                                , c.fullname AS name
+                                , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS name
                                 , c.shortname
                                 , cc.name AS category
                                 , (SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
@@ -822,7 +822,7 @@ class CourseController extends Controller
                         , ug.area
                         , u.city
                         , ug.position
-                        , c.shortname AS course_name
+                        , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS course_name
                         , ((SELECT count(completionstate) FROM mdl_course_modules_completion where userid=u.id and completionstate<>0 and coursemoduleid in (select id from mdl_course_modules where course=c.id and completion>1)) / (select count(id) from mdl_course_modules where course=c.id and completion>1))*100 AS progress 
                         , (select gg.finalgrade from mdl_grade_grades gg left join mdl_grade_items gi on gi.id = gg.itemid where gg.userid = u.id and gi.courseid=c.id and gi.itemtype = 'course') AS qualification
                         , 'DTX' AS provider_name
@@ -879,7 +879,7 @@ class CourseController extends Controller
                         , ug.area
                         , u.city
                         , ug.position
-                        , c.shortname AS course_name
+                        , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS course_name
                         , ((SELECT count(completionstate) FROM mdl_course_modules_completion where userid=u.id and completionstate<>0 and coursemoduleid in (select id from mdl_course_modules where course=c.id and completion>1)) / (select count(id) from mdl_course_modules where course=c.id and completion>1))*100 AS progress 
                         , (select gg.finalgrade from mdl_grade_grades gg left join mdl_grade_items gi on gi.id = gg.itemid where gg.userid = u.id and gi.courseid=c.id and gi.itemtype = 'course') AS qualification
                         , 'DTX' AS provider_name
@@ -930,7 +930,7 @@ class CourseController extends Controller
                 (
                     SELECT c.id AS course_id
                         , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timecreated)),'%Y-%m-%d %H:%m:%s') created_at
-                        , c.shortname AS course_name
+                        , c.fullname AS course_name
                         , 'T' AS attend_how
                         , u.email AS user_email
                         , (SELECT cd.value FROM mdl_customfield_data cd left join mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
@@ -961,7 +961,7 @@ class CourseController extends Controller
                 FROM
                 (
                     SELECT c.id AS course_id
-                        , c.shortname AS course_name
+                        , c.fullname AS course_name
                         , 'T' AS attend_how
                         , u.email AS user_email
                         , (SELECT cd.value FROM mdl_customfield_data cd left join mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
@@ -1112,7 +1112,7 @@ class CourseController extends Controller
                         , ug.position
                         , c.id AS course_id
                         , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timecreated)),'%Y-%m-%d %H:%m:%s') created_at
-                        , c.shortname AS course_name
+                        , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS course_name
                         , 'T' AS attend_how
                         , u.email AS user_email
                         , (SELECT cd.value FROM mdl_customfield_data cd left join mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
@@ -1153,7 +1153,7 @@ class CourseController extends Controller
                         , ug.lastname
                         , ug.position
                         , c.id AS course_id
-                        , c.shortname AS course_name
+                        , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS course_name
                         , 'T' AS attend_how
                         , u.email AS user_email
                         , (SELECT cd.value FROM mdl_customfield_data cd left join mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
