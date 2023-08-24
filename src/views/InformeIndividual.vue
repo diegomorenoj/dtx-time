@@ -209,6 +209,12 @@
           <template slot="no-results">
             No hay resultados para mostrar
           </template>
+          <template
+            slot="item.course_name"
+            slot-scope="props"
+          >
+            <div v-html="props.item.course_name" />
+          </template>
         </v-data-table>
       </v-card-text>
     </material-card>

@@ -226,6 +226,9 @@
           <template slot="no-results">
             No hay resultados para mostrar
           </template>
+          <template v-slot:[`item.name`]="data">
+            <div v-html="data.item.name" />
+          </template>
           <template v-slot:[`item.users_count`]="data">
             <a
               v-if="data.item.users_count > 0"
