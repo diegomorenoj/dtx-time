@@ -670,7 +670,6 @@ class TrainingRequestController extends Controller
                     $trainingRequestUser->save();
 
                     // Datos para el template del reporte
-                    /*
                     $data = $this->getUserDataMail($user['id'], 1);
 
                     // Para el template
@@ -685,17 +684,16 @@ class TrainingRequestController extends Controller
                     $mailData["training_requests_value"] = $trainingRequest->fee == null ? 0 : $trainingRequest->fee;
                     $mailData["training_requests_methodology"] =
                         $trainingRequest->methodology == 'P' ? 'Presencial': 'Virtual';
-                    $mailData["url_training"] = 'http://localhost:8080/config/trainingrequests/';
+                    $mailData["url_training"] = config('app.url').'/config/trainingrequests/';
 
                     // Enviar el correo
-                    Mail::send($data->template, $mailData, function($message)use($mailData) {
-                        $message->to($mailData['mail'] )->subject($mailData['subject']);
-                    });
-                    */
+
+                    $this->sendEmail($data->template, $mailData);
+                   
                 }
             } else {
                 // Datos para el template del reporte
-                /*
+                
                 $data = $this->getUserDataMail($input['user_id'], 1);
 
                 // Para el template
@@ -709,12 +707,11 @@ class TrainingRequestController extends Controller
                 $mailData["training_requests_value"] = $trainingRequest->fee == null ? 0 : $trainingRequest->fee;
                 $mailData["training_requests_methodology"] =
                     $trainingRequest->methodology == 'P' ? 'Presencial': 'Virtual';
-                $mailData["url_training"] = 'http://localhost:8080/config/trainingrequests/';
+                $mailData["url_training"] = config('app.url').'/config/trainingrequests/';
 
                 // Enviar el correo
-                Mail::send($data->template, $mailData, function($message)use($mailData) {
-                    $message->to($mailData['mail'] )->subject($mailData['subject']);
-                }); */
+                $this->sendEmail($data->template, $mailData);
+
             }
 
             // LOG
@@ -752,6 +749,21 @@ class TrainingRequestController extends Controller
                 'message' => 'Error al crear la capacitación externa.'
             ];
             return response()->json($response, 400);
+        }
+    }
+
+
+    /**
+     * Esta funcion envía el email 
+     */
+    private function sendEmail($template, $mailData) {
+        try {
+            Mail::send($template, $mailData, function($message) use ($mailData) {
+                $message->to($mailData['mail'])->subject($mailData['subject']);
+            });
+        } catch (\Exception $e) {
+            // Aquí puedes registrar el error si es necesario
+            \Log::error('Error al enviar correo: ' . $e->getMessage());
         }
     }
 
