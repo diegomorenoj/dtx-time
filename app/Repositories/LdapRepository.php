@@ -13,6 +13,8 @@ class LdapRepository {
         $data = [];
         $users = array();
         $count = 0;
+        $pageSize = 500;
+        $cookie = '';
 
         $filtro='(objectcategory=Person)';
         $attributes=array(
@@ -27,13 +29,14 @@ class LdapRepository {
 
         try {
             
+            // crear paginacion
+
             // conexion al servidor LDAP
             $ldapconn = ldap_connect(config('app.ldap_host'), config('app.ldap_port')) or die("Could not connect to LDAP server.");
             
             if ($ldapconn) {
 
                 ldap_set_option($ldapconn, LDAP_OPT_REFERRALS, 0); 
-
                 ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
 
                 // realizando la autenticacion
@@ -42,11 +45,12 @@ class LdapRepository {
                 // verificacion del enlace
                 if ($ldapbind) {
 
-                    ldap_control_paged_result($ldapconn, 9000);
-                    
-                    $search = ldap_search($ldapconn, config('app.ldap_base_search'), $filtro, $attributes);
-                    
-                    //validamos busqueda
+                    do {
+                        
+                        ldap_control_paged_result($ldapconn, $pageSize, true, $cookie);
+                        $search = ldap_search($ldapconn, config('app.ldap_base_search'), $filtro, $attributes);
+
+                        //validamos busqueda
                     if ($search) {
                         $data = ldap_get_entries($ldapconn, $search);
                         $count = ldap_count_entries($ldapconn, $search);
@@ -67,6 +71,11 @@ class LdapRepository {
                             }
                         }
                     }
+
+                    ldap_control_paged_result_response($ldapconn, $search, $cookie);
+
+                    }while($cookie !== null && $cookie != '');
+                    
                 }
                 ldap_close($ldapconn);   
             }
