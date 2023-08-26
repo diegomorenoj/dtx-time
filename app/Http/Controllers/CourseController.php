@@ -60,18 +60,18 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.created_at,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
                         , DB::raw('null AS specialty_name')
                     )
-                    ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
+                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
                     ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
                     ->whereRaw('c.specialty_id LIKE "'.$specialty_id.'"')
                     ->whereRaw('c.category LIKE "'.$category.'"')
                     ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.created_at','desc')
+                    ->orderBy('c.start_date','desc')
                     ->get();
             }
             else
@@ -83,17 +83,17 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.created_at,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
                         , DB::raw('null AS specialty_name')
                     )
-                    ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
+                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
                     ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
                     ->whereRaw('c.category LIKE "'.$category.'"')
                     ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.created_at','desc')
+                    ->orderBy('c.start_date','desc')
                     ->get();
             }
         }
@@ -108,7 +108,7 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.created_at,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
@@ -118,7 +118,7 @@ class CourseController extends Controller
                     ->whereRaw('c.specialty_id LIKE "'.$specialty_id.'"')
                     ->whereRaw('c.category LIKE "'.$category.'"')
                     ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.created_at','desc')
+                    ->orderBy('c.start_date','desc')
                     ->get();
             }
             else
@@ -130,7 +130,7 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.created_at,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
@@ -139,7 +139,7 @@ class CourseController extends Controller
                     ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
                     ->whereRaw('c.category LIKE "'.$category.'"')
                     ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.created_at','desc')
+                    ->orderBy('start_date','desc')
                     ->get();
             }
         }
@@ -234,7 +234,7 @@ class CourseController extends Controller
                         , cur.updated_at
                         , cur.status_name
                         , cur.provider_name
-                        , cur.date
+                        , cur.date 
                         , cur.users
                         , cur.users_count
                         , cur.origin
@@ -257,7 +257,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timecreated)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
@@ -295,7 +295,7 @@ class CourseController extends Controller
                         , cur.updated_at
                         , cur.status_name
                         , cur.provider_name
-                        , cur.date
+                        , cur.date 
                         , cur.users
                         , cur.users_count
                         , cur.origin
@@ -318,7 +318,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timecreated)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
@@ -381,7 +381,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timecreated)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
@@ -407,7 +407,7 @@ class CourseController extends Controller
                         , cur.shortname
                         , cur.category
                         , cur.hours
-                        , cur.start_date
+                        , cur.start_date 
                         , cur.end_date
                         , cur.provide_id
                         , cur.specialty_id
@@ -441,7 +441,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timecreated)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
