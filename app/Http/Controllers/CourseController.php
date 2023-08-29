@@ -60,7 +60,8 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
@@ -83,7 +84,8 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
@@ -108,7 +110,8 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
@@ -130,7 +133,8 @@ class CourseController extends Controller
                         'c.*'
                         , 'p.name AS status_name'
                         , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date')
                         , DB::raw('null AS users')
                         , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
                         , DB::raw('"app" AS origin')
@@ -248,7 +252,7 @@ class CourseController extends Controller
                                 , cc.name AS category
                                 ,(SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
                                 , DATE(FROM_UNIXTIME(c.startdate)) AS start_date
-                                , if((c.enddate=0), NULL, DATE(FROM_UNIXTIME(c.enddate))) AS end_date
+                                , if((c.enddate=0), NULL, DATE_FORMAT(DATE(FROM_UNIXTIME(c.enddate)),'%d/%m/%Y')) AS end_date
                                 , 2 AS provide_id
                                 , null AS training_request_id
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 12, 13) AS status_id
@@ -257,7 +261,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
@@ -309,7 +313,7 @@ class CourseController extends Controller
                                 , cc.name AS category
                                 ,(SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
                                 , DATE(FROM_UNIXTIME(c.startdate)) AS start_date
-                                , if((c.enddate=0), NULL, DATE(FROM_UNIXTIME(c.enddate))) AS end_date
+                                , if((c.enddate=0), NULL, DATE_FORMAT(DATE(FROM_UNIXTIME(c.enddate)),'%d/%m/%Y')) AS end_date
                                 , 2 AS provide_id
                                 , null AS training_request_id
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 12, 13) AS status_id
@@ -318,7 +322,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
@@ -372,7 +376,7 @@ class CourseController extends Controller
                                 , cc.name AS category
                                 , (SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
                                 , DATE(FROM_UNIXTIME(c.startdate)) AS start_date
-                                , if((c.enddate=0), NULL, DATE(FROM_UNIXTIME(c.enddate))) AS end_date
+                                , if((c.enddate=0), NULL, DATE_FORMAT(DATE(FROM_UNIXTIME(c.enddate)),'%d/%m/%Y')) AS end_date
                                 , 2 AS provide_id
                                 , null AS training_request_id
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 12, 13) AS status_id
@@ -381,7 +385,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
@@ -432,7 +436,7 @@ class CourseController extends Controller
                                 , cc.name AS category
                                 , (SELECT cd.value FROM mdl_customfield_data cd LEFT JOIN mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
                                 , DATE(FROM_UNIXTIME(c.startdate)) AS start_date
-                                , if((c.enddate=0), NULL, DATE(FROM_UNIXTIME(c.enddate))) AS end_date
+                                , if((c.enddate=0), NULL, DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y')) AS end_date
                                 , 2 AS provide_id
                                 , null AS training_request_id
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 12, 13) AS status_id
@@ -441,7 +445,7 @@ class CourseController extends Controller
                                 , DATE_FORMAT(DATE(FROM_UNIXTIME(c.timemodified)),'%Y-%m-%d %H:%m:%s') updated_at
                                 , if(c.enddate=0 or DATE(FROM_UNIXTIME(c.enddate))>=now(), 'En curso', 'Finalizado') AS status_name
                                 , 'DTX' AS provider_name
-                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%b %d de %Y') AS date
+                                , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y') AS date
                                 , null AS users
                                 , 0 AS users_count
                                 , 'moodle' AS origin
@@ -538,6 +542,8 @@ class CourseController extends Controller
                         , 'u.city'
                         , 'u.position'
                         , 'c.name AS course_name'
+                        , DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date')
                         , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
                         , 'uc.qualification'
                         , 'pv.name AS provider_name'
@@ -575,6 +581,8 @@ class CourseController extends Controller
                         , 'u.city'
                         , 'u.position'
                         , 'c.name AS course_name'
+                        , DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date')
+                        , DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date')                        
                         , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
                         , 'uc.qualification'
                         , 'pv.name AS provider_name'
@@ -803,6 +811,8 @@ class CourseController extends Controller
                     , cur.area
                     , cur.city
                     , cur.position
+                    , cur.date 
+                    , cur.end_date
                     , cur.course_name
                     , CONCAT(ROUND(IFNULL(cur.progress, 0), 0), '%') AS progress
                     , ROUND(IFNULL(cur.qualification, 0), 1) AS qualification
@@ -822,6 +832,8 @@ class CourseController extends Controller
                         , ug.area
                         , u.city
                         , ug.position
+                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y') AS date
+                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.enddate)),'%d/%m/%Y') AS end_date
                         , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS course_name
                         , ((SELECT count(completionstate) FROM mdl_course_modules_completion where userid=u.id and completionstate<>0 and coursemoduleid in (select id from mdl_course_modules where course=c.id and completion>1)) / (select count(id) from mdl_course_modules where course=c.id and completion>1))*100 AS progress 
                         , (select gg.finalgrade from mdl_grade_grades gg left join mdl_grade_items gi on gi.id = gg.itemid where gg.userid = u.id and gi.courseid=c.id and gi.itemtype = 'course') AS qualification
@@ -860,6 +872,8 @@ class CourseController extends Controller
                     , cur.area
                     , cur.city
                     , cur.position
+                    , cur.date
+                    , cur.end_date
                     , cur.course_name
                     , CONCAT(ROUND(IFNULL(cur.progress, 0), 0), '%') AS progress
                     , ROUND(IFNULL(cur.qualification, 0), 1) AS qualification
@@ -879,6 +893,8 @@ class CourseController extends Controller
                         , ug.area
                         , u.city
                         , ug.position
+                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y') AS date
+                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.enddate)),'%d/%m/%Y') AS end_date
                         , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS course_name
                         , ((SELECT count(completionstate) FROM mdl_course_modules_completion where userid=u.id and completionstate<>0 and coursemoduleid in (select id from mdl_course_modules where course=c.id and completion>1)) / (select count(id) from mdl_course_modules where course=c.id and completion>1))*100 AS progress 
                         , (select gg.finalgrade from mdl_grade_grades gg left join mdl_grade_items gi on gi.id = gg.itemid where gg.userid = u.id and gi.courseid=c.id and gi.itemtype = 'course') AS qualification
