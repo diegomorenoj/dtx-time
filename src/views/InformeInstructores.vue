@@ -5,16 +5,12 @@
     tag="section"
   >
     <v-row align="center">
-      <v-col
-        cols="6"
-      >
+      <v-col cols="6">
         <p class="mb-0 d-inline-block text-h4">
           Informe instrcutores
         </p>
       </v-col>
-      <v-col
-        cols="6"
-      >
+      <v-col cols="6">
         <div class="pb-2 text-right">
           <download-excel
             class="ml-2 v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--small primary"
@@ -37,12 +33,10 @@
     </v-row>
     <v-divider class="mb-6 secondary" />
     <div class="mb-3 mt-3">
-      &nbsp;
+&nbsp;
     </div>
     <v-row>
-      <v-col
-        cols="8"
-      >
+      <v-col cols="8">
         <v-row>
           <v-col>
             <material-card
@@ -79,7 +73,10 @@
                         v-model="filter.range"
                         no-title
                         range
-                        @change="displayDate = false; loadData();"
+                        @change="
+                          displayDate = false;
+                          loadData();
+                        "
                       />
                     </v-menu>
                   </v-col>
@@ -107,7 +104,7 @@
                     <v-divider class="secondary" />
                     <p
                       class="text-h2 text-right mt-0 mb-0"
-                      style="line-height: 1.2em !important;"
+                      style="line-height: 1.2em !important"
                     >
                       {{ summary.hours_teach }}
                     </p>
@@ -136,7 +133,7 @@
           hide-details
           label="Buscar registros"
           single-line
-          style="max-width: 250px;"
+          style="max-width: 250px"
         />
 
         <v-divider class="mt-3" />
@@ -149,7 +146,7 @@
           must-sort
           :footer-props="{
             showFirstLastPage: true,
-            'itemsPerPageText':'Cursos por página'
+            itemsPerPageText: 'Cursos por página',
           }"
         >
           <template slot="no-data">
@@ -157,6 +154,12 @@
           </template>
           <template slot="no-results">
             No hay resultados para mostrar
+          </template>
+          <template
+            slot="item.course_name"
+            slot-scope="props"
+          >
+            <div v-html="props.item.course_name" />
           </template>
         </v-data-table>
       </v-card-text>
@@ -176,11 +179,12 @@
       timeout="10000"
       v-bind="{
         ['top']: true,
-        ['right']: true
+        ['right']: true,
       }"
     >
       <div>
-        <span class="font-weight-bold">&nbsp;{{ snackbar.title }}&nbsp;</span> <span v-html="snackbar.message" />
+        <span class="font-weight-bold">&nbsp;{{ snackbar.title }}&nbsp;</span>
+        <span v-html="snackbar.message" />
       </div>
     </material-snackbar>
   </v-container>
@@ -218,11 +222,11 @@
       },
       styles: {
         type: Object,
-        default: () => {},
+        default: () => { },
       },
       plugins: {
         type: Object,
-        default: () => {},
+        default: () => { },
       },
     },
     data () {
@@ -317,36 +321,40 @@
       };
     },
     computed: {
-      ...get('session', [
-        'userInfo',
-      ]),
+      ...get('session', ['userInfo']),
     },
     watch: {
       searchUsers (val) {
         console.log('Filtro:', val);
         this.isLoading = true;
-        this.parameterService.filterUsers(val).then(res => {
-          const { count, entries } = res;
-          this.count = count;
-          this.lstUsers = entries;
-          console.log('lstUsers::::::', entries);
-          this.isLoading = false;
-        }).catch((error) => {
-          console.log('Error::::::', error);
-          this.isLoading = false;
-        });
+        this.parameterService
+          .filterUsers(val)
+          .then((res) => {
+            const { count, entries } = res;
+            this.count = count;
+            this.lstUsers = entries;
+            console.log('lstUsers::::::', entries);
+            this.isLoading = false;
+          })
+          .catch((error) => {
+            console.log('Error::::::', error);
+            this.isLoading = false;
+          });
       },
       searchCities (val) {
         this.isLoadingCities = true;
-        this.parameterService.filterCities(val).then(res => {
-          const { count, entries } = res;
-          this.count = count;
-          this.lstCities = entries;
-          this.isLoadingCities = false;
-        }).catch((error) => {
-          console.log('Error::::::', error);
-          this.isLoadingCities = false;
-        });
+        this.parameterService
+          .filterCities(val)
+          .then((res) => {
+            const { count, entries } = res;
+            this.count = count;
+            this.lstCities = entries;
+            this.isLoadingCities = false;
+          })
+          .catch((error) => {
+            console.log('Error::::::', error);
+            this.isLoadingCities = false;
+          });
       },
     },
     created () {
@@ -364,57 +372,75 @@
       loadData () {
         this.overlay = true;
         this.filter.tipo = 2; // INFORME INDIVIDUAL
-        this.courseService.getInstructorsByFilter(this.filter).then(response => {
-          console.log('Load Data::::::::::::', response.data);
-          this.items = response.data.data;
-          this.summary = response.data.summary;
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.courseService
+          .getInstructorsByFilter(this.filter)
+          .then((response) => {
+            console.log('Load Data::::::::::::', response.data);
+            this.items = response.data.data;
+            this.summary = response.data.summary;
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
       },
       loadParameters () {
         this.overlay = true;
-        this.parameterService.getByType(2).then(response => {
-          this.lstStatus = response.data;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
-        this.providerService.all().then(response => {
-          this.lstProvider = response.data;
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
-        this.parameterService.getSpecialties().then(response => {
-          this.lstSpecialities = response.data;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.parameterService
+          .getByType(2)
+          .then((response) => {
+            this.lstStatus = response.data;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
+        this.providerService
+          .all()
+          .then((response) => {
+            this.lstProvider = response.data;
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
+        this.parameterService
+          .getSpecialties()
+          .then((response) => {
+            this.lstSpecialities = response.data;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
       },
       getAreas () {
         this.overlay = true;
-        this.parameterService.getAllAreas().then(response => {
-          this.lstAreas = response.data;
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.parameterService
+          .getAllAreas()
+          .then((response) => {
+            this.lstAreas = response.data;
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
       },
       getPositionsByArea () {
         this.overlay = true;
-        this.parameterService.getPositionsByArea(this.filter.area).then(response => {
-          this.lstPositions = response.data;
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.parameterService
+          .getPositionsByArea(this.filter.area)
+          .then((response) => {
+            this.lstPositions = response.data;
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
       },
       viewData (item) {
         this.overlay = true;
@@ -435,20 +461,19 @@
         this.displayDialogTeach = true;
       },
     },
-
   };
 </script>
 <style lang="sass">
-  .bar-content
-    height: 395px !important
+.bar-content
+  height: 395px !important
 
-    .bar-content-col
-      height: inherit !important
+  .bar-content-col
+    height: inherit !important
 
-  #multiple-bar
-    .ct-series-a .ct-bar
-      stroke: #9c27b0 !important
-      stroke-width: 30px !important
-  #chart-bar-gtmx
-    padding: 0px 10px 10px 10px !important
+#multiple-bar
+  .ct-series-a .ct-bar
+    stroke: #9c27b0 !important
+    stroke-width: 30px !important
+#chart-bar-gtmx
+  padding: 0px 10px 10px 10px !important
 </style>

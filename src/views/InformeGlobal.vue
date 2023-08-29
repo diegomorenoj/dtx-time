@@ -5,16 +5,12 @@
     tag="section"
   >
     <v-row align="center">
-      <v-col
-        cols="6"
-      >
+      <v-col cols="6">
         <p class="mb-0 d-inline-block text-h4">
           Informe global
         </p>
       </v-col>
-      <v-col
-        cols="6"
-      >
+      <v-col cols="6">
         <div class="pb-2 text-right">
           <download-excel
             class="ml-2 v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--small primary"
@@ -37,7 +33,7 @@
     </v-row>
     <v-divider class="mb-6 secondary" />
     <div class="mb-3 mt-3">
-      &nbsp;
+&nbsp;
     </div>
     <material-card
       icon="mdi-filter"
@@ -73,7 +69,10 @@
                 v-model="filter.range"
                 no-title
                 range
-                @change="displayDate = false; loadData();"
+                @change="
+                  displayDate = false;
+                  loadData();
+                "
               />
             </v-menu>
           </v-col>
@@ -115,7 +114,10 @@
               item-value="area"
               :disabled="!userInfo.permits.SEARCH_GLOBAL_AREA"
               clearable
-              @change="getPositionsByArea(); loadData();"
+              @change="
+                getPositionsByArea();
+                loadData();
+              "
             />
           </v-col>
           <v-col>
@@ -208,7 +210,7 @@
                 <v-divider class="secondary" />
                 <p
                   class="text-h2 text-right mt-0"
-                  style="line-height: 1.2em !important;"
+                  style="line-height: 1.2em !important"
                 >
                   {{ summary.hours_total }}
                 </p>
@@ -232,7 +234,7 @@
           hide-details
           label="Buscar registros"
           single-line
-          style="max-width: 250px;"
+          style="max-width: 250px"
         />
 
         <v-divider class="mt-3" />
@@ -245,7 +247,7 @@
           must-sort
           :footer-props="{
             showFirstLastPage: true,
-            'itemsPerPageText':'Cursos por página'
+            itemsPerPageText: 'Cursos por página',
           }"
         >
           <template slot="no-data">
@@ -253,6 +255,9 @@
           </template>
           <template slot="no-results">
             No hay resultados para mostrar
+          </template>
+          <template v-slot:[`item.course_name`]="data">
+            <div v-html="data.item.course_name" />
           </template>
           <template v-slot:[`item.actions`]="data">
             <div>
@@ -295,9 +300,7 @@
         <v-card-text>
           <v-form>
             <v-row align="center">
-              <v-col
-                cols="6"
-              >
+              <v-col cols="6">
                 <v-text-field
                   v-model="item.position"
                   label="Cargo"
@@ -305,9 +308,7 @@
                   :disabled="true"
                 />
               </v-col>
-              <v-col
-                cols="6"
-              >
+              <v-col cols="6">
                 <v-text-field
                   v-model="item.user_email"
                   label="Correo"
@@ -317,9 +318,7 @@
               </v-col>
             </v-row>
             <v-row align="center">
-              <v-col
-                cols="6"
-              >
+              <v-col cols="6">
                 <v-text-field
                   v-model="item.city"
                   label="Ciudad"
@@ -327,9 +326,7 @@
                   :disabled="true"
                 />
               </v-col>
-              <v-col
-                cols="6"
-              >
+              <v-col cols="6">
                 <v-text-field
                   v-model="item.area"
                   label="Área"
@@ -339,9 +336,7 @@
               </v-col>
             </v-row>
             <v-row align="center">
-              <v-col
-                cols="6"
-              >
+              <v-col cols="6">
                 <v-text-field
                   v-model="item.role_name"
                   label="Rol"
@@ -379,11 +374,12 @@
       timeout="10000"
       v-bind="{
         ['top']: true,
-        ['right']: true
+        ['right']: true,
       }"
     >
       <div>
-        <span class="font-weight-bold">&nbsp;{{ snackbar.title }}&nbsp;</span> <span v-html="snackbar.message" />
+        <span class="font-weight-bold">&nbsp;{{ snackbar.title }}&nbsp;</span>
+        <span v-html="snackbar.message" />
       </div>
     </material-snackbar>
   </v-container>
@@ -421,11 +417,11 @@
       },
       styles: {
         type: Object,
-        default: () => {},
+        default: () => { },
       },
       plugins: {
         type: Object,
-        default: () => {},
+        default: () => { },
       },
     },
     data () {
@@ -433,9 +429,7 @@
         bar: {
           data: {
             labels: ['DTX', 'GT Learn', 'Externas'],
-            series: [
-              [0, 0, 0],
-            ],
+            series: [[0, 0, 0]],
           },
           options: {
             seriesBarDistance: 10,
@@ -490,6 +484,14 @@
           {
             text: 'Curso',
             value: 'course_name',
+          },
+          {
+            text: 'Inicio',
+            value: 'date',
+          },
+          {
+            text: 'Fin',
+            value: 'end_date',
           },
           {
             text: 'Progreso',
@@ -579,36 +581,40 @@
       };
     },
     computed: {
-      ...get('session', [
-        'userInfo',
-      ]),
+      ...get('session', ['userInfo']),
     },
     watch: {
       searchUsers (val) {
         console.log('Filtro:', val);
         this.isLoading = true;
-        this.parameterService.filterUsers(val).then(res => {
-          const { count, entries } = res;
-          this.count = count;
-          this.lstUsers = entries;
-          console.log('lstUsers::::::', entries);
-          this.isLoading = false;
-        }).catch((error) => {
-          console.log('Error::::::', error);
-          this.isLoading = false;
-        });
+        this.parameterService
+          .filterUsers(val)
+          .then((res) => {
+            const { count, entries } = res;
+            this.count = count;
+            this.lstUsers = entries;
+            console.log('lstUsers::::::', entries);
+            this.isLoading = false;
+          })
+          .catch((error) => {
+            console.log('Error::::::', error);
+            this.isLoading = false;
+          });
       },
       searchCities (val) {
         this.isLoadingCities = true;
-        this.parameterService.filterCities(val).then(res => {
-          const { count, entries } = res;
-          this.count = count;
-          this.lstCities = entries;
-          this.isLoadingCities = false;
-        }).catch((error) => {
-          console.log('Error::::::', error);
-          this.isLoadingCities = false;
-        });
+        this.parameterService
+          .filterCities(val)
+          .then((res) => {
+            const { count, entries } = res;
+            this.count = count;
+            this.lstCities = entries;
+            this.isLoadingCities = false;
+          })
+          .catch((error) => {
+            console.log('Error::::::', error);
+            this.isLoadingCities = false;
+          });
       },
     },
     created () {
@@ -625,58 +631,73 @@
     methods: {
       loadData () {
         this.overlay = true;
-        this.courseService.getDashboardByFilter(this.filter).then(response => {
-          console.log('Load Data::::::::::::', response.data);
-          this.items = response.data.data;
-          this.summary = response.data.summary;
-          // OLD CHART
-          this.bar.data.labels = response.data.chart.labels;
-          this.bar.data.series = response.data.chart.series;
-          this.bar.options.high = response.data.chart.high;
-          // NUEVO CHART BAR
-          this.chartData.labels = response.data.chart.labels;
-          this.chartData.datasets[0].data = response.data.chart.series[0];
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.courseService
+          .getDashboardByFilter(this.filter)
+          .then((response) => {
+            console.log('Load Data::::::::::::', response.data);
+            this.items = response.data.data;
+            this.summary = response.data.summary;
+            // OLD CHART
+            this.bar.data.labels = response.data.chart.labels;
+            this.bar.data.series = response.data.chart.series;
+            this.bar.options.high = response.data.chart.high;
+            // NUEVO CHART BAR
+            this.chartData.labels = response.data.chart.labels;
+            this.chartData.datasets[0].data = response.data.chart.series[0];
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
       },
       loadParameters () {
         this.overlay = true;
-        this.parameterService.getByType(2).then(response => {
-          this.lstStatus = response.data;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
-        this.providerService.all().then(response => {
-          this.lstProvider = response.data;
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
-        this.parameterService.getSpecialties().then(response => {
-          this.lstSpecialities = response.data;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.parameterService
+          .getByType(2)
+          .then((response) => {
+            this.lstStatus = response.data;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
+        this.providerService
+          .all()
+          .then((response) => {
+            this.lstProvider = response.data;
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
+        this.parameterService
+          .getSpecialties()
+          .then((response) => {
+            this.lstSpecialities = response.data;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
 
         // SI EL ROL ES 4
         if (this.userInfo.rol_id === 4) {
           this.filter.city = this.userInfo.city;
 
-          this.parameterService.filterCities(this.filter.city).then(res => {
-            const { count, entries } = res;
-            this.count = count;
-            this.lstCities = entries;
-            this.isLoadingCities = false;
-          }).catch((error) => {
-            console.log('Error::::::', error);
-            this.isLoadingCities = false;
-          });
+          this.parameterService
+            .filterCities(this.filter.city)
+            .then((res) => {
+              const { count, entries } = res;
+              this.count = count;
+              this.lstCities = entries;
+              this.isLoadingCities = false;
+            })
+            .catch((error) => {
+              console.log('Error::::::', error);
+              this.isLoadingCities = false;
+            });
         }
 
         // SI EL ROL ES 5
@@ -684,38 +705,47 @@
           this.filter.area = this.userInfo.area;
           this.filter.city = this.userInfo.city;
 
-          this.parameterService.filterCities(this.filter.city).then(res => {
-            const { count, entries } = res;
-            this.count = count;
-            this.lstCities = entries;
-            this.isLoadingCities = false;
-          }).catch((error) => {
-            console.log('Error::::::', error);
-            this.isLoadingCities = false;
-          });
+          this.parameterService
+            .filterCities(this.filter.city)
+            .then((res) => {
+              const { count, entries } = res;
+              this.count = count;
+              this.lstCities = entries;
+              this.isLoadingCities = false;
+            })
+            .catch((error) => {
+              console.log('Error::::::', error);
+              this.isLoadingCities = false;
+            });
         }
 
         console.log('Filter::::::::::::::::::', this.filter);
       },
       getAreas () {
         this.overlay = true;
-        this.parameterService.getAllAreas().then(response => {
-          this.lstAreas = response.data;
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.parameterService
+          .getAllAreas()
+          .then((response) => {
+            this.lstAreas = response.data;
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
       },
       getPositionsByArea () {
         this.overlay = true;
-        this.parameterService.getPositionsByArea(this.filter.area).then(response => {
-          this.lstPositions = response.data;
-          this.overlay = false;
-        }).catch((error) => {
-          console.log(error);
-          this.overlay = false;
-        });
+        this.parameterService
+          .getPositionsByArea(this.filter.area)
+          .then((response) => {
+            this.lstPositions = response.data;
+            this.overlay = false;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.overlay = false;
+          });
       },
       viewData (item) {
         this.overlay = true;
@@ -732,20 +762,19 @@
         this.overlay = false;
       },
     },
-
   };
 </script>
 <style lang="sass">
-  .bar-content
-    height: 395px !important
+.bar-content
+  height: 395px !important
 
-    .bar-content-col
-      height: inherit !important
+  .bar-content-col
+    height: inherit !important
 
-  #multiple-bar
-    .ct-series-a .ct-bar
-      stroke: #9c27b0 !important
-      stroke-width: 30px !important
-  #chart-bar-gtmx
-    padding: 0px 10px 10px 10px !important
+#multiple-bar
+  .ct-series-a .ct-bar
+    stroke: #9c27b0 !important
+    stroke-width: 30px !important
+#chart-bar-gtmx
+  padding: 0px 10px 10px 10px !important
 </style>
