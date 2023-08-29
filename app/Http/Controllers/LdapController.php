@@ -33,33 +33,34 @@ class LdapController extends Controller
         $ldap_users = $this->ldapRepository->getUsers();
         $password = config('app.default_password');
         $user_count = 0;
+        $user_count_edit = 0;
         
         foreach ($ldap_users['users'] as $item) {
             
             try {
 
-                $users = User::where('email', $item->email)->get();
+                $user = User::where('email', $item->email)->first();
                 
                 // Si no existe se lo debe crear en la base de datos local
-                if ($users->isEmpty()){
-
+                if (!$user){
                     $user = new User;
                     $user->lastname = $item->lastname;
                     $user->name = $item->name;
                     $user->username = $item->username;
                     $user->email = $item->email;
-                    $user->area = $item->area;
-                    $user->position = $item->position;
-                    $user->city = $item->city;
                     $user->status = 'A';
                     $user->origin = 'ldap';
                     $user->rol_id = 2;
                     $user->password = Hash::make($password);
-                    
-                    // Save User
-                    $user->save();
                     $user_count++;
+                } else {
+                    $user_count_edit++;    
                 }
+
+                $user->area = $item->area;
+                $user->position = $item->position;
+                $user->city = $item->city;
+                $user->save();
                 
             } catch (\Exception $e) {
                 // guardar el log en una tabla
@@ -70,7 +71,7 @@ class LdapController extends Controller
         $response = [
             'success' => true,
             'data' => 'Users imported: '. $user_count,
-            'message' => $user_count .' Usuarios importados Exitosamente'
+            'message' => $user_count .' Usuarios importados Exitosamente '. $user_count_edit . " Usuarios Editados Exitosamente " 
         ];
         
         return response()->json($response, 200);

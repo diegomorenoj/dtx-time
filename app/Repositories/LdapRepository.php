@@ -74,7 +74,9 @@ class LdapRepository {
 
                     ldap_control_paged_result_response($ldapconn, $search, $cookie);
 
-                    }while($cookie !== null && $cookie != '');
+                    }while($cookie !== null && $cookie != '');                 
+                    
+                    
                     
                 }
                 ldap_close($ldapconn);   

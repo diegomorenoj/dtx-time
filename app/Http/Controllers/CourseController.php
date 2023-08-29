@@ -7,8 +7,12 @@ use Validator;
 use App\Models\Course;
 use App\Models\Provider;
 use App\Models\UserCourse;
+use App\Models\Specialty;
+use App\Models\Parameter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class CourseController extends Controller
 {
@@ -36,110 +40,102 @@ class CourseController extends Controller
             'data' => $data,
             'message' => 'List Courses Successfully'
         ];
-        
+
         return response()->json($response, 200);
     }
 
-    public function getByFilter(Request $request) {
+    public function getByFilter(Request $request)
+    {
 
-        $input = $request->all();      
+        $input = $request->all();
         $range = $input['range'] === null ? '%%' : $input['range'];
         $name = $input['name'] === null ? '%%' : '%' . $input['name'] . '%';
         $specialty_id = $input['specialty_id'] === null ? '%%' : '%' . $input['specialty_id'] . '%';
         $category = $input['category'] === null ? '%%' : '%' . $input['category'] . '%';
         $status_id = $input['status_id'] === null ? '%%' : $input['status_id'];
 
-        if($input['range'] !== null)
-        {
-            if($input['specialty_id'] !== null)
-            {
+        if ($input['range'] !== null) {
+            if ($input['specialty_id'] !== null) {
                 $courses = DB::table('courses AS c')
                     ->join('parameters AS p', 'p.id', '=', 'c.status_id')
                     ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                     ->select(
-                        'c.*'
-                        , 'p.name AS status_name'
-                        , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
-                        , DB::raw('null AS users')
-                        , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
-                        , DB::raw('"app" AS origin')
-                        , DB::raw('null AS specialty_name')
+                        'c.*',
+                        'p.name AS status_name',
+                        'pv.name AS provider_name',
+                        DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date'),
+                        DB::raw('null AS users'),
+                        DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count'),
+                        DB::raw('"app" AS origin'),
+                        DB::raw('null AS specialty_name')
                     )
-                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                    ->whereRaw('c.specialty_id LIKE "'.$specialty_id.'"')
-                    ->whereRaw('c.category LIKE "'.$category.'"')
-                    ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.start_date','desc')
+                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                    ->whereRaw('c.specialty_id LIKE "' . $specialty_id . '"')
+                    ->whereRaw('c.category LIKE "' . $category . '"')
+                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
+                    ->orderBy('c.start_date', 'desc')
+                    ->get();
+            } else {
+                $courses = DB::table('courses AS c')
+                    ->join('parameters AS p', 'p.id', '=', 'c.status_id')
+                    ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
+                    ->select(
+                        'c.*',
+                        'p.name AS status_name',
+                        'pv.name AS provider_name',
+                        DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date'),
+                        DB::raw('null AS users'),
+                        DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count'),
+                        DB::raw('"app" AS origin'),
+                        DB::raw('null AS specialty_name')
+                    )
+                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                    ->whereRaw('c.category LIKE "' . $category . '"')
+                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
+                    ->orderBy('c.start_date', 'desc')
                     ->get();
             }
-            else
-            {
+        } else {
+            if ($input['specialty_id'] !== null) {
                 $courses = DB::table('courses AS c')
                     ->join('parameters AS p', 'p.id', '=', 'c.status_id')
                     ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                     ->select(
-                        'c.*'
-                        , 'p.name AS status_name'
-                        , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
-                        , DB::raw('null AS users')
-                        , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
-                        , DB::raw('"app" AS origin')
-                        , DB::raw('null AS specialty_name')
+                        'c.*',
+                        'p.name AS status_name',
+                        'pv.name AS provider_name',
+                        DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date'),
+                        DB::raw('null AS users'),
+                        DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count'),
+                        DB::raw('"app" AS origin'),
+                        DB::raw('null AS specialty_name')
                     )
-                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                    ->whereRaw('c.category LIKE "'.$category.'"')
-                    ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.start_date','desc')
+                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                    ->whereRaw('c.specialty_id LIKE "' . $specialty_id . '"')
+                    ->whereRaw('c.category LIKE "' . $category . '"')
+                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
+                    ->orderBy('c.start_date', 'desc')
                     ->get();
-            }
-        }
-        else
-        {
-            if($input['specialty_id'] !== null)
-            {
+            } else {
                 $courses = DB::table('courses AS c')
                     ->join('parameters AS p', 'p.id', '=', 'c.status_id')
                     ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                     ->select(
-                        'c.*'
-                        , 'p.name AS status_name'
-                        , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
-                        , DB::raw('null AS users')
-                        , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
-                        , DB::raw('"app" AS origin')
-                        , DB::raw('null AS specialty_name')
+                        'c.*',
+                        'p.name AS status_name',
+                        'pv.name AS provider_name',
+                        DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date'),
+                        DB::raw('null AS users'),
+                        DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count'),
+                        DB::raw('"app" AS origin'),
+                        DB::raw('null AS specialty_name')
                     )
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                    ->whereRaw('c.specialty_id LIKE "'.$specialty_id.'"')
-                    ->whereRaw('c.category LIKE "'.$category.'"')
-                    ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.start_date','desc')
-                    ->get();
-            }
-            else
-            {
-                $courses = DB::table('courses AS c')
-                    ->join('parameters AS p', 'p.id', '=', 'c.status_id')
-                    ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
-                    ->select(
-                        'c.*'
-                        , 'p.name AS status_name'
-                        , 'pv.name AS provider_name'
-                        , DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date')
-                        , DB::raw('null AS users')
-                        , DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count')
-                        , DB::raw('"app" AS origin')
-                        , DB::raw('null AS specialty_name')
-                    )
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                    ->whereRaw('c.category LIKE "'.$category.'"')
-                    ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('start_date','desc')
+                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                    ->whereRaw('c.category LIKE "' . $category . '"')
+                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
+                    ->orderBy('start_date', 'desc')
                     ->get();
             }
         }
@@ -151,7 +147,7 @@ class CourseController extends Controller
             $users = DB::table('users AS u')
                 ->select('u.*')
                 ->join('user_courses AS uc', 'uc.user_id', '=', 'u.id')
-                ->whereRaw('uc.course_id = "'.$item->id.'"')
+                ->whereRaw('uc.course_id = "' . $item->id . '"')
                 ->get();
 
             $item->users_count = $users->count();
@@ -161,14 +157,14 @@ class CourseController extends Controller
         // PROVEEDORES
         $providers = DB::table('providers AS p')
             ->select(
-                'p.id'
-                , 'p.name'
-                , DB::raw('CONVERT((SELECT COUNT(*) FROM courses c WHERE c.provider_id = p.id), CHAR) AS count')
+                'p.id',
+                'p.name',
+                DB::raw('CONVERT((SELECT COUNT(*) FROM courses c WHERE c.provider_id = p.id), CHAR) AS count')
             )
             ->groupBy('p.id', 'p.name')
             ->get();
 
-        
+
 
         // CURSOS DE MOODLE
         $courses_moodle = $this->getCoursesMoodle($input);
@@ -177,23 +173,22 @@ class CourseController extends Controller
 
         // RESUMEN
         $summary = new \stdClass();
-        $summary->total_courses = ($courses->count() +  count($courses_moodle)). "";
+        $summary->total_courses = ($courses->count() +  count($courses_moodle)) . "";
         $summary->providers = $providers;
         $summary->training_to_approved = "0";
 
         $data = new \stdClass();
-        $data->summary = $summary;  
+        $data->summary = $summary;
         $data->data = $results;
-        $data->courses_moodle = $courses_moodle;     
+        $data->courses_moodle = $courses_moodle;
 
         $response = [
             'success' => true,
             'data' => $data,
             'message' => 'List Courses Successfully'
         ];
-        
-        return response()->json($response, 200);
 
+        return response()->json($response, 200);
     }
 
     /**
@@ -211,10 +206,8 @@ class CourseController extends Controller
         // Base de datos principal
         $bd_local = config('app.database_owner');
 
-        if($input['range'] !== null)
-        {
-            if($input['specialty_id'] !== null)
-            {
+        if ($input['range'] !== null) {
+            if ($input['specialty_id'] !== null) {
                 $courses_aux = DB::connection('mysql_aux')->select("
                     SELECT 
                         cur.id
@@ -273,9 +266,7 @@ class CourseController extends Controller
                         AND cur.status_id LIKE ?
                         AND s.id LIKE ?
                 ", array($input['range'][0], $input['range'][1], $name, $category, $status_id, $specialty_id));
-            }
-            else
-            {
+            } else {
                 $courses_aux = DB::connection('mysql_aux')->select("
                     SELECT 
                         cur.id
@@ -334,11 +325,8 @@ class CourseController extends Controller
                         AND cur.status_id LIKE ?
                 ", array($input['range'][0], $input['range'][1], $name, $category, $status_id));
             }
-        }
-        else
-        {
-            if($input['specialty_id'] !== null)
-            {
+        } else {
+            if ($input['specialty_id'] !== null) {
                 $courses_aux = DB::connection('mysql_aux')->select("
                     SELECT 
                         cur.id
@@ -396,9 +384,7 @@ class CourseController extends Controller
                         AND cur.status_id LIKE ?
                         AND s.id LIKE ?
                 ", array($name, $category, $status_id, $specialty_id));
-            }
-            else
-            {
+            } else {
                 $courses_aux = DB::connection('mysql_aux')->select("
                     SELECT 
                         cur.id
@@ -462,8 +448,9 @@ class CourseController extends Controller
             // --------------------------------------------------------------------------------------
             // USUARIOS ASOCIADOS
             // --------------------------------------------------------------------------------------
-            
-            $users = DB::connection('mysql_aux')->select("
+
+            $users = DB::connection('mysql_aux')->select(
+                "
                 SELECT 
                     u.id
                     , u.email
@@ -479,9 +466,10 @@ class CourseController extends Controller
                 INNER JOIN mdl_role r ON r.id = ra.roleid
                 INNER JOIN mdl_course_categories cc ON cc.id = c.category
                 WHERE c.id = ?
-                ", array($item->code)
+                ",
+                array($item->code)
             );
-            
+
             $item->users_count = count($users);
             $item->users = $users;
         }
@@ -494,7 +482,8 @@ class CourseController extends Controller
      * 
      * @return \Illuminate\Http\Response
      */
-    public function getDashboardByFilter(Request $request) {
+    public function getDashboardByFilter(Request $request)
+    {
 
         try {
             $input = $request->all();
@@ -508,8 +497,7 @@ class CourseController extends Controller
             $tipo = isset($input['tipo']) ? $input['tipo'] : 1;
 
             // VALIDAR EL TIPO DE REPO / 1: GENERAL, 2: INDIVIDUAL
-            if($tipo === 2)
-            {
+            if ($tipo === 2) {
                 $user_email = $this->user->email;
             }
 
@@ -523,8 +511,7 @@ class CourseController extends Controller
                 $area = $input['area'] === null ? '%%' : $input['area'];
             }
 
-            if($input['range'] !== null)
-            {
+            if ($input['range'] !== null) {
                 $courses = DB::table('courses AS c')
                     ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
                     ->join('users AS u', 'u.id', '=', 'uc.user_id')
@@ -532,36 +519,34 @@ class CourseController extends Controller
                     ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                     ->join('rols AS r', 'r.id', '=', 'u.rol_id')
                     ->select(
-                        'c.id AS course_id'
-                        , 'u.lastname AS user_name'
-                        , 'u.area'
-                        , 'u.city'
-                        , 'u.position'
-                        , 'c.name AS course_name'
-                        , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
-                        , 'uc.qualification'
-                        , 'pv.name AS provider_name'
-                        , 'uc.hours'
-                        , 'p.name AS status_name'
-                        , 'r.name AS role_name' 
-                        , 'u.email AS user_email'     
-                        , 'c.required'
-                        , DB::raw('CASE c.required WHEN "S" THEN "Si" WHEN "N" THEN "No" END AS required')	
-                        , 'c.status_id'
+                        'c.id AS course_id',
+                        'u.lastname AS user_name',
+                        'u.area',
+                        'u.city',
+                        'u.position',
+                        'c.name AS course_name',
+                        DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress'),
+                        'uc.qualification',
+                        'pv.name AS provider_name',
+                        'uc.hours',
+                        'p.name AS status_name',
+                        'r.name AS role_name',
+                        'u.email AS user_email',
+                        'c.required',
+                        DB::raw('CASE c.required WHEN "S" THEN "Si" WHEN "N" THEN "No" END AS required'),
+                        'c.status_id'
                         // , DB::raw('DATE_FORMAT(c.created_at,"%b %d de %Y") AS date')
                     )
-                    ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                    ->whereRaw('u.email LIKE "'.$user_email.'"')
-                    ->whereRaw('u.area LIKE "'.$area.'"')
-                    ->whereRaw('u.position LIKE "'.$position.'"')
-                    ->whereRaw('u.city LIKE "'.$city.'"')
-                    ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.created_at','desc')
-                    ->get();            
-            }
-            else
-            {
+                    ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                    ->whereRaw('u.email LIKE "' . $user_email . '"')
+                    ->whereRaw('u.area LIKE "' . $area . '"')
+                    ->whereRaw('u.position LIKE "' . $position . '"')
+                    ->whereRaw('u.city LIKE "' . $city . '"')
+                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
+                    ->orderBy('c.created_at', 'desc')
+                    ->get();
+            } else {
                 $courses = DB::table('courses AS c')
                     ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
                     ->join('users AS u', 'u.id', '=', 'uc.user_id')
@@ -569,30 +554,31 @@ class CourseController extends Controller
                     ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                     ->join('rols AS r', 'r.id', '=', 'u.rol_id')
                     ->select(
-                        'c.id AS course_id'
-                        , 'u.lastname AS user_name'
-                        , 'u.area'
-                        , 'u.city'
-                        , 'u.position'
-                        , 'c.name AS course_name'
-                        , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
-                        , 'uc.qualification'
-                        , 'pv.name AS provider_name'
-                        , 'uc.hours'
-                        , 'p.name AS status_name'
-                        , 'r.name AS role_name'
-                        , 'u.email AS user_email'
-                        , DB::raw('CASE c.required WHEN "S" THEN "Si" WHEN "N" THEN "No" END AS required')	
+                        'c.id AS course_id',
+                        'u.lastname AS user_name',
+                        'u.area',
+                        'u.city',
+                        'u.position',
+                        'c.name AS course_name',
+                        DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress'),
+                        'uc.qualification',
+                        'pv.name AS provider_name',
+                        'uc.hours',
+                        'p.name AS status_name',
+                        'r.name AS role_name',
+                        'u.email AS user_email',
+                        DB::raw('CASE c.required WHEN "S" THEN "Si" WHEN "N" THEN "No" END AS required')
                         // , DB::raw('DATE_FORMAT(c.created_at,"%b %d de %Y") AS date')
-                        , 'c.status_id'
+                        ,
+                        'c.status_id'
                     )
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                    ->whereRaw('u.email LIKE "'.$user_email.'"')
-                    ->whereRaw('u.area LIKE "'.$area.'"')
-                    ->whereRaw('u.position LIKE "'.$position.'"')
-                    ->whereRaw('u.city LIKE "'.$city.'"')
-                    ->whereRaw('c.status_id LIKE "'.$status_id.'"')
-                    ->orderBy('c.created_at','desc')
+                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                    ->whereRaw('u.email LIKE "' . $user_email . '"')
+                    ->whereRaw('u.area LIKE "' . $area . '"')
+                    ->whereRaw('u.position LIKE "' . $position . '"')
+                    ->whereRaw('u.city LIKE "' . $city . '"')
+                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
+                    ->orderBy('c.created_at', 'desc')
                     ->get();
             }
 
@@ -601,10 +587,8 @@ class CourseController extends Controller
             $results_teach = null;
             $hours_teach = 0;
 
-            if($tipo === 2)
-            {
-                if($input['range'] !== null)
-                {
+            if ($tipo === 2) {
+                if ($input['range'] !== null) {
 
                     $courses_teach = DB::table('courses AS c')
                         ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
@@ -613,21 +597,19 @@ class CourseController extends Controller
                         ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                         ->join('rols AS r', 'r.id', '=', 'u.rol_id')
                         ->select(
-                            'c.id AS course_id'
-                            , 'c.name AS course_name'
-                            , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
-                            , 'uc.qualification'
-                            , 'uc.hours'
-                            , 'u.email AS user_email'
+                            'c.id AS course_id',
+                            'c.name AS course_name',
+                            DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress'),
+                            'uc.qualification',
+                            'uc.hours',
+                            'u.email AS user_email'
                         )
-                        ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
-                        ->whereRaw('u.email LIKE "'.$user_email.'"')
+                        ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                        ->whereRaw('u.email LIKE "' . $user_email . '"')
                         ->whereRaw('uc.attend_how = "T"')
-                        ->orderBy('c.created_at','desc')
-                        ->get();            
-                }
-                else
-                {
+                        ->orderBy('c.created_at', 'desc')
+                        ->get();
+                } else {
                     $courses_teach = DB::table('courses AS c')
                         ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
                         ->join('users AS u', 'u.id', '=', 'uc.user_id')
@@ -635,20 +617,20 @@ class CourseController extends Controller
                         ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                         ->join('rols AS r', 'r.id', '=', 'u.rol_id')
                         ->select(
-                            'c.id AS course_id'
-                            , 'c.name AS course_name'
-                            , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
-                            , 'uc.qualification'
-                            , 'uc.hours'
-                            , 'u.email AS user_email'
+                            'c.id AS course_id',
+                            'c.name AS course_name',
+                            DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress'),
+                            'uc.qualification',
+                            'uc.hours',
+                            'u.email AS user_email'
                         )
-                        ->whereRaw('u.email LIKE "'.$user_email.'"')
+                        ->whereRaw('u.email LIKE "' . $user_email . '"')
                         ->whereRaw('uc.attend_how = "T"')
-                        ->orderBy('c.created_at','desc')
+                        ->orderBy('c.created_at', 'desc')
                         ->get();
                 }
             }
-            
+
             // CURSOS DE MOODLE
             $courses_moodle = $this->getDashboardByFilterMoodle($input);
             $merged = $courses->merge($courses_moodle);
@@ -670,7 +652,7 @@ class CourseController extends Controller
             $hours_aprove = 0;
             $hours_total = 0;
             foreach ($results as $item) {
-                if($item->status_id == 13) $hours_aprove += $item->hours;
+                if ($item->status_id == 13) $hours_aprove += $item->hours;
                 $hours_total += $item->hours;
             }
 
@@ -684,9 +666,9 @@ class CourseController extends Controller
             $providersA = DB::table('providers AS p')
                 ->leftJoin('courses AS c', 'p.id', '=', 'c.provider_id')
                 ->select(
-                    'p.id'
-                    , 'p.name'
-                    , DB::raw('COUNT(p.id) AS count') // CANTIDAD DE CURSOS
+                    'p.id',
+                    'p.name',
+                    DB::raw('COUNT(p.id) AS count') // CANTIDAD DE CURSOS
                 )
                 ->whereIn('c.id', $lstID)
                 ->groupBy('p.id', 'p.name')
@@ -694,9 +676,9 @@ class CourseController extends Controller
 
             $providersB = DB::table('providers AS p')
                 ->select(
-                    'p.id'
-                    , 'p.name'
-                    , DB::raw('0 AS count') // CANTIDAD DE CURSOS
+                    'p.id',
+                    'p.name',
+                    DB::raw('0 AS count') // CANTIDAD DE CURSOS
                 )
                 ->where('p.id', 3) // DTX
                 ->get();
@@ -746,9 +728,9 @@ class CourseController extends Controller
                 'lstID' => $lstID,
                 'message' => 'List Courses Dashboard Successfully'
             ];
-            
+
             return response()->json($response, 200);
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             $response = [
                 'success' => false,
                 'data' => $e->getMessage(),
@@ -756,7 +738,6 @@ class CourseController extends Controller
             ];
             return response()->json($response, 400);
         }
-
     }
 
     /**
@@ -776,8 +757,7 @@ class CourseController extends Controller
         $tipo = isset($input['tipo']) ? $input['tipo'] : 1;
 
         // VALIDAR EL TIPO DE REPO / 1: GENERAL, 2: INDIVIDUAL
-        if($tipo === 2)
-        {
+        if ($tipo === 2) {
             $user_email = $this->user->email;
         }
 
@@ -790,12 +770,11 @@ class CourseController extends Controller
             $city = $input['city'] === null ? '%%' : $input['city'];
             $area = $input['area'] === null ? '%%' : $input['area'];
         }
-        
+
         // Base de datos principal
         $bd_local = config('app.database_owner');
 
-        if($input['range'] !== null)
-        {
+        if ($input['range'] !== null) {
             $courses_aux = DB::connection('mysql_aux')->select("
                 SELECT 
                     cur.course_id
@@ -850,9 +829,7 @@ class CourseController extends Controller
                     AND cur.position LIKE ?
                     AND cur.status_id LIKE ?
             ", array($input['range'][0], $input['range'][1], $name, $user_email, $city, $area, $position, $status_id));
-        }
-        else
-        {
+        } else {
             $courses_aux = DB::connection('mysql_aux')->select("
                 SELECT 
                     cur.course_id
@@ -916,8 +893,7 @@ class CourseController extends Controller
         // Base de datos principal
         $bd_local = config('app.database_owner');
 
-        if($range !== null)
-        {
+        if ($range !== null) {
             $courses_aux = DB::connection('mysql_aux')->select("
                 SELECT 
                     cur.course_id
@@ -947,9 +923,7 @@ class CourseController extends Controller
                     DATE_FORMAT(cur.created_at,'%Y-%m-%d') BETWEEN ? AND ?
                     AND cur.user_email LIKE ?
             ", array($range[0], $range[1], $user_email));
-        }
-        else
-        {
+        } else {
             $courses_aux = DB::connection('mysql_aux')->select("
                 SELECT 
                     cur.course_id
@@ -987,9 +961,10 @@ class CourseController extends Controller
      * 
      * @return \Illuminate\Http\Response
      */
-    public function getInstructorsByFilter(Request $request) {
+    public function getInstructorsByFilter(Request $request)
+    {
 
-        $input = $request->all();      
+        $input = $request->all();
         $range = $input['range'] === null ? '%%' : $input['range'];
         $name = $input['name'] === null ? '%%' : '%%' . $input['name'] . '%%';
         $user_email = $input['user_email'] === null ? '%%' : $input['user_email'];
@@ -999,8 +974,7 @@ class CourseController extends Controller
         $results_teach = null;
         $hours_teach = 0;
 
-        if($input['range'] !== null)
-        {
+        if ($input['range'] !== null) {
             $courses_teach = DB::table('courses AS c')
                 ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
                 ->join('users AS u', 'u.id', '=', 'uc.user_id')
@@ -1008,26 +982,24 @@ class CourseController extends Controller
                 ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                 ->join('rols AS r', 'r.id', '=', 'u.rol_id')
                 ->select(
-                    'u.area'
-                    , 'u.city'
-                    , 'u.lastname'
-                    , 'u.position'
-                    , 'c.id AS course_id'
-                    , 'c.name AS course_name'
-                    , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
-                    , 'uc.qualification'
-                    , 'uc.hours'
-                    , 'u.email AS user_email'
+                    'u.area',
+                    'u.city',
+                    'u.lastname',
+                    'u.position',
+                    'c.id AS course_id',
+                    'c.name AS course_name',
+                    DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress'),
+                    'uc.qualification',
+                    'uc.hours',
+                    'u.email AS user_email'
                 )
-                ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
-                ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                ->whereRaw('u.email LIKE "'.$user_email.'"')
+                ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                ->whereRaw('u.email LIKE "' . $user_email . '"')
                 ->whereRaw('uc.attend_how = "T"')
-                ->orderBy('c.created_at','desc')
-                ->get();            
-        }
-        else
-        {
+                ->orderBy('c.created_at', 'desc')
+                ->get();
+        } else {
             $courses_teach = DB::table('courses AS c')
                 ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
                 ->join('users AS u', 'u.id', '=', 'uc.user_id')
@@ -1035,21 +1007,21 @@ class CourseController extends Controller
                 ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
                 ->join('rols AS r', 'r.id', '=', 'u.rol_id')
                 ->select(
-                    'u.area'
-                    , 'u.city'
-                    , 'u.lastname'
-                    , 'u.position'
-                    , 'c.id AS course_id'
-                    , 'c.name AS course_name'
-                    , DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress')
-                    , 'uc.qualification'
-                    , 'uc.hours'
-                    , 'u.email AS user_email'
+                    'u.area',
+                    'u.city',
+                    'u.lastname',
+                    'u.position',
+                    'c.id AS course_id',
+                    'c.name AS course_name',
+                    DB::raw('CONCAT(ROUND(IFNULL(uc.progress, 0), 0), "%")  AS progress'),
+                    'uc.qualification',
+                    'uc.hours',
+                    'u.email AS user_email'
                 )
-                ->whereRaw('(UPPER(c.name) LIKE UPPER("'.$name.'") OR UPPER(c.shortname) LIKE UPPER("'.$name.'"))')
-                ->whereRaw('u.email LIKE "'.$user_email.'"')
+                ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
+                ->whereRaw('u.email LIKE "' . $user_email . '"')
                 ->whereRaw('uc.attend_how = "T"')
-                ->orderBy('c.created_at','desc')
+                ->orderBy('c.created_at', 'desc')
                 ->get();
         }
 
@@ -1075,13 +1047,12 @@ class CourseController extends Controller
             'data' => $data,
             'message' => 'List Courses Instructors Successfully'
         ];
-        
-        return response()->json($response, 200);
 
+        return response()->json($response, 200);
     }
 
     private function getInstructorsMoodle($input)
-    {    
+    {
         $range = $input['range'] === null ? '%%' : $input['range'];
         $name = $input['name'] === null ? '%%' : '%%' . $input['name'] . '%%';
         $user_email = $input['user_email'] === null ? '%%' : $input['user_email'];
@@ -1089,8 +1060,7 @@ class CourseController extends Controller
         // Base de datos principal
         $bd_local = config('app.database_owner');
 
-        if($input['range'] !== null)
-        {
+        if ($input['range'] !== null) {
             $courses_aux = DB::connection('mysql_aux')->select("
                 SELECT 
                     cur.area
@@ -1130,9 +1100,7 @@ class CourseController extends Controller
                     AND cur.course_name LIKE ?
                     AND cur.user_email LIKE ?
             ", array($input['range'][0], $input['range'][1], $name, $user_email));
-        }
-        else
-        {
+        } else {
             $courses_aux = DB::connection('mysql_aux')->select("
                 SELECT 
                     cur.area
@@ -1220,8 +1188,8 @@ class CourseController extends Controller
         }
 
         $course = new Course;
-        if(isset($input['code'])) $course->code = $input['code'];
-        if(isset($input['name'])) $course->name = $input['name'];
+        if (isset($input['code'])) $course->code = $input['code'];
+        if (isset($input['name'])) $course->name = $input['name'];
         else $course->name = $input['shortname'];
 
         $course->shortname = $input['shortname'];
@@ -1231,7 +1199,7 @@ class CourseController extends Controller
         $course->end_date = $input['end_date'];
         $course->provider_id = $input['provider_id'];
         $course->required = $input['required'];
-        if(isset($input['training_request_id'])) $course->training_request_id = $input['training_request_id'];
+        if (isset($input['training_request_id'])) $course->training_request_id = $input['training_request_id'];
         $course->status_id = 12; // EN CURSO
         $course->specialty_id = $input['specialty_id'];
         // GUARDAR
@@ -1239,7 +1207,7 @@ class CourseController extends Controller
 
         // CÓDIGO
         // DTX-anio-id
-        $code = 'DTX-' .date("Y") . '-' . $course->id;
+        $code = 'DTX-' . date("Y") . '-' . $course->id;
 
         $course->code = $code;
         $course->save();
@@ -1261,7 +1229,8 @@ class CourseController extends Controller
      */
     public function storeExcel(Request $request)
     {
-        $input = $request->all();
+        $inputs = $request->all();
+        
 
         $rules = [
             'shortname' => 'required',
@@ -1286,108 +1255,80 @@ class CourseController extends Controller
         ];
 
         // VALIDACIONES
-        $validator = Validator::make($input, $rules, $messages);
 
-        if ($validator->fails()) {
+        $providers = Provider::all()->pluck('id');
+        $specialties = Specialty::all()->pluck('id');
+        $statuses = Parameter::all()->pluck('id');
 
-            $response = [
-                'success' => false,
-                'data' => null,
-                'message' => $validator->errors()
+        $responses = [];
+
+        foreach ($inputs as $input) {
+
+            $validator = Validator::make($input, $rules, $messages);
+
+            if ($validator->fails()) {
+                $responses[] = [
+                    'success' => false,
+                    'data' => null,
+                    'message' => $validator->errors(),
+                ];
+                return response()->json($response, 200);
+            }
+
+            if (!$providers->contains($input['provider_id'])) {
+                $responses[] = [
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'El proveedor con código: ' . $input['provider_id'] . ', No existe.',
+                ];
+                continue;
+            }
+
+            if (!$specialties->contains($input['specialty_id'])) {
+                $responses[] = [
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'La especialidad con código: ' . $input['specialty_id'] . ', No existe.',
+                ];
+                continue;
+            }
+
+            if (!$statuses->contains($input['status_id'])) {
+                $responses[] = [
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'El estado con código: ' . $input['status_id'] . ', No existe.',
+                ];
+                continue;
+            }
+
+            $courseData = [
+                'code' => $input['code'],
+                'name' => $input['name'] ?? $input['shortname'],
+                'shortname' => $input['shortname'],
+                'category' => $input['category'],
+                'hours' => $input['hours'],
+                'start_date' => $input['start_date'],
+                'end_date' => $input['end_date'],
+                'provider_id' => $input['provider_id'],
+                'required' => $input['required'],
+                'status_id' => $input['status_id'],
+                'specialty_id' => $input['specialty_id'],
             ];
+            
+            $course = Course::updateOrCreate(['code' => $input['code']], $courseData);
 
-            return response()->json($response, 200);
-        }
-
-        $course = new Course;
-
-        // VALIDAR LA EXISTENCIA DEL CURSO
-        $courses = DB::table('courses AS c')
-            ->select('c.*')
-            ->where('c.code', $input['code'])
-            ->get();
-
-        if ($courses->count() > 0) {
-            $course = Course::find($courses[0]->id);
-        }
-
-        // VALIDAR LA EXISTENCIA DEL PROVEEDOR
-        $providers = DB::table('providers AS p')
-            ->select('p.id')
-            ->where('p.id', $input['provider_id'])
-            ->get();
-
-        if ($providers->count() == 0) {
-
-            $response = [
-                'success' => false,
-                'data' => null,
-                'message' => 'El proveedor con código: ' . $input['provider_id'] . ', No existe.'
+            $responses[] = [
+                'success' => true,
+                'data' => $course,
+                'message' => 'Curso ' . $course->code . ' - ' . $course->shortname . ' importado correctamente.',
             ];
-
-            return response()->json($response, 200);
         }
 
-        // VALIDAR LA EXISTENCIA DE LA ESPECIALIDAD
-        $specialties = DB::table('specialties AS s')
-            ->select('s.id')
-            ->where('s.id', $input['specialty_id'])
-            ->get();
-
-        if ($specialties->count() == 0) {
-
-            $response = [
-                'success' => false,
-                'data' => null,
-                'message' => 'La especialidad con código: ' . $input['specialty_id'] . ', No existe.'
-            ];
-
-            return response()->json($response, 200);
-        }
-
-        // VALIDAR LA EXISTENCIA DEL ESTADO
-        $status = DB::table('parameters AS p')
-            ->select('p.id')
-            ->where('p.id', $input['status_id'])
-            ->get();
-
-        if ($status->count() == 0) {
-
-            $response = [
-                'success' => false,
-                'data' => null,
-                'message' => 'El estado con código: ' . $input['status_id'] . ', No existe.'
-            ];
-
-            return response()->json($response, 200);
-        }
-
-        if(isset($input['code'])) $course->code = $input['code'];
-        if(isset($input['name'])) $course->name = $input['name'];
-        else $course->name = $input['shortname'];
-
-        $course->shortname = $input['shortname'];
-        $course->category = $input['category'];
-        $course->hours = $input['hours'];
-        $course->start_date = $input['start_date'];
-        $course->end_date = $input['end_date'];
-        $course->provider_id = $input['provider_id'];
-        $course->required = $input['required'];
-        if(isset($input['training_request_id'])) $course->training_request_id = $input['training_request_id'];
-        $course->status_id = $input['status_id'];
-        $course->specialty_id = $input['specialty_id'];
-
-        // GUARDAR
-        $course->save();
-
-        $response = [
-            'success' => true,
-            'data' => $course,
-            'message' => 'Curso '. $course->code .' - '. $course->shortname .' importado correctamente.'
-        ];
-
-        return response()->json($response, 200);
+        return response()->json($responses, 200);
     }
+
+
 
     /**
      * Store a newly import Users excel in storage.
@@ -1498,7 +1439,7 @@ class CourseController extends Controller
         if ($userCourses->count() > 0) {
             $userCourse = UserCourse::find($userCourses[0]->id);
         }
-        
+
         $userCourse->course_id = $courses[0]->id;
         $userCourse->user_id = $users[0]->id;
         $userCourse->attend_how = $input['attend_how'];
@@ -1513,7 +1454,7 @@ class CourseController extends Controller
         $response = [
             'success' => true,
             'data' => $userCourse,
-            'message' => 'Usuario '. $input['user_email'] .', en curso '. $input['course_code'] .', importado correctamente.'
+            'message' => 'Usuario ' . $input['user_email'] . ', en curso ' . $input['course_code'] . ', importado correctamente.'
         ];
 
         return response()->json($response, 200);
@@ -1564,8 +1505,8 @@ class CourseController extends Controller
             return response()->json($response, 500);
         }
 
-        if(isset($input['code'])) $course->code = $input['code'];
-        if(isset($input['name'])) $course->name = $input['name'];
+        if (isset($input['code'])) $course->code = $input['code'];
+        if (isset($input['name'])) $course->name = $input['name'];
         $course->shortname = $input['shortname'];
         $course->category = $input['category'];
         $course->hours = $input['hours'];
@@ -1607,25 +1548,22 @@ class CourseController extends Controller
             ];
 
             return response()->json($response, 200);
+        } catch (\Exception $e) {
 
-        } catch(\Exception $e) {
-
-            if($e->errorInfo[1] === 1451) { // Códifo de llave foranea
+            if ($e->errorInfo[1] === 1451) { // Códifo de llave foranea
                 $response = [
                     'success' => false,
                     'data' => 'Exception Error.',
                     'message' => 'No se puede eliminar, el curso esta relacionado con otros registros.'
                 ];
-            }
-            else
-            {
+            } else {
                 $response = [
                     'success' => false,
                     'data' => 'Exception Error.',
-                    'message' => $e->getCode() 
+                    'message' => $e->getCode()
                 ];
             }
-            return response()->json($response, 400);            
+            return response()->json($response, 400);
         }
     }
 }
