@@ -486,6 +486,14 @@
             value: 'course_name',
           },
           {
+            text: 'Inicio',
+            value: 'date',
+          },
+          {
+            text: 'Fin',
+            value: 'end_date',
+          },
+          {
             text: 'Progreso',
             value: 'progress',
           },

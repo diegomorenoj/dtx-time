@@ -466,6 +466,14 @@
             value: 'required',
           },
           {
+            text: 'Inicio',
+            value: 'date',
+          },
+          {
+            text: 'Fin',
+            value: 'end_date',
+          },
+          {
             text: 'Avance',
             value: 'progress',
           },
