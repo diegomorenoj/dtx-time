@@ -687,16 +687,16 @@
           value: 'code',
         },
         {
+          text: 'Nombre',
+          value: 'name',
+        },
+        {
           text: 'Inicio',
           value: 'date',
         },
         {
           text: 'Fin',
           value: 'end_date',
-        },
-        {
-          text: 'Nombre',
-          value: 'name',
         },
         {
           text: 'Plataforma',
