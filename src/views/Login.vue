@@ -46,6 +46,12 @@
               >
                 Acceder
               </v-btn>
+              <div
+                v-if="message"
+                :style="{ color: 'red', fontWeight: 'bold', backgroundColor: '#dfdfdf', marginTop: '10px', padding:'10px', fontSize: '18px' }"
+              >
+                {{ message }}
+              </div>
             </v-card-text>
           </material-card>
         </v-slide-y-transition>
@@ -67,11 +73,12 @@
 
   import AuthService from '../services/AuthService';
   import { get, sync } from 'vuex-pathify';
-
+  
   export default {
     name: 'LoginView',
 
     data: () => ({
+      message: '',
       authService: null,
       resp: null,
       user: {
@@ -107,6 +114,10 @@
           password: this.user.password,
         };
         this.authService.login(body).then(data => {
+          if (data.error) {
+            this.message = 'Usuario ó contraseña incorrectos';
+            return;
+          }
           localStorage.setItem('session@token', data.token);// guardar en el storage
           localStorage.setItem('session@logged', true);
           localStorage.setItem('session@userInfo', JSON.stringify(data.user));
@@ -116,6 +127,10 @@
           this.$store.commit('session/SET_USER_INFO', data.user);
           this.overlay = false;
           this.$router.push('/');
+        }).catch((error) => {
+          console.error(error);
+          this.message = 'Usuario ó contraseña incorrectos';
+          this.overlay = false;
         });
       },
     },
