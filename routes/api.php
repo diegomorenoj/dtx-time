@@ -73,6 +73,7 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::post('courses/instructors/filter', 'App\Http\Controllers\CourseController@getInstructorsByFilter');
     Route::post('courses/excel/course', 'App\Http\Controllers\CourseController@storeExcel');
     Route::post('courses/excel/user', 'App\Http\Controllers\CourseController@storeUsersExcel');
+    Route::post('courses/excelimport', 'App\Http\Controllers\CourseController@excelImport');
     Route::resource('objetives', ObjectiveController::class);
     Route::post('objetives/filter', 'App\Http\Controllers\ObjectiveController@getByFilter');
     Route::post('objetives/filtergeneral', 'App\Http\Controllers\ObjectiveController@getByFilterGeneral');
