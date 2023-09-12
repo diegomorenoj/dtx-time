@@ -35,6 +35,16 @@
             color="primary"
             min-width="100"
             class="mr-2"
+            @click="dialogImportExcel = true"
+          >
+            Cargar Excel
+          </v-btn>
+          <v-btn
+            v-if="userInfo.permits.IMPORT_COURSES"
+            small
+            color="primary"
+            min-width="100"
+            class="mr-2"
             @click="openImport(optionCourse)"
           >
             <v-icon left>
@@ -278,6 +288,40 @@
         </v-data-table>
       </v-card-text>
     </material-card>
+    <!-- Cuadro de diálogo para cargar archivo de excel al servidor -->
+    <v-dialog
+      v-model="dialogImportExcel"
+      persistent
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          Subir archivo Excel
+        </v-card-title>
+        <v-card-text>
+          <v-file-input
+            v-model="file"
+            label="Archivo"
+            :show-size="1000"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-btn
+            text
+            @click="dialog = false"
+          >
+            Cancelar
+          </v-btn>
+          <v-btn
+            color="primary"
+            @click="submitFile"
+          >
+            Subir
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- ----- -->
     <v-dialog
       v-model="displayDialog"
       persistent
@@ -786,6 +830,7 @@
       search: undefined,
       overlay: false,
       displayDialog: false,
+      dialogImportExcel: false,
       disabled: false,
       isEdit: false,
       confirm: false,
@@ -862,6 +907,24 @@
           console.log(error);
           this.overlay = false;
         });
+      },
+      async submitFile () {
+        if (!this.file) {
+          alert('Por favor, selecciona un archivo.');
+          return;
+        }
+
+        // Usar FormData para enviar el archivo a través de axios
+        const formData = new FormData();
+        formData.append('file', this.file);
+
+        try {
+          const response = await this.courseService.importExcel(formData);
+          console.log(response); // Puedes gestionar la respuesta como lo necesites
+          this.dialog = false; // Cierra el cuadro de diálogo después de la subida exitosa
+        } catch (error) {
+          console.error('Error al subir el archivo:', error);
+        }
       },
       loadParameters () {
         this.overlay = true;
