@@ -2,53 +2,43 @@
 
 namespace App\Imports;
 
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\ToModel;
+use Illuminate\Support\Facades\Log;
 use App\Models\Course;
 use App\Models\Provider;
 use App\Models\Specialty;
-use App\Models\Parameter;  
+use App\Models\Parameter;
 
-class CoursesImport implements ToCollection
+class CoursesImport implements ToModel
 {
     /**
-     * Handle the imported Excel rows.
+     * Handle the imported Excel row.
      *
-     * @param Collection $rows Excel rows.
+     * @param array $row Excel row.
+     * @return \Illuminate\Database\Eloquent\Model|null
      */
-    public function collection(Collection $rows)
+    public function model(array $row)
     {
-        // Iterar a través de las filas del archivo Excel.
-        foreach ($rows as $key => $row) {
+        
+        $attributes = [
+            'code'         => $row[0],
+            'name'         => $row[1],
+            'category'     => $row[2],
+            'hours'        => $row[3],
+            'start_date'   => $row[4],
+            'end_date'     => $row[5],
+            'provider_id'  => $row[6],
+            'specialty_id' => $row[7],
+            'status_id'    => $row[8],  // Usando el ID de la tabla t_p_parameters
+            'required'     => $row[9]
+        ];
+        
 
-            // Omitir la primera fila, asumiendo que es el encabezado del archivo Excel.
-            if ($key === 0) continue;
 
-            // Buscar el proveedor basado en el nombre proporcionado en la fila actual.
-            $provider = Provider::where('name', $row[6])->first();
+        // Intenta actualizar el registro con 'code' dado, si no existe, lo crea
+        return Course::updateOrCreate(['code' => $row[0]], $attributes);
 
-            // Buscar la especialidad basada en el nombre proporcionado en la fila actual.
-            $specialty = Specialty::where('name', $row[7])->first();
 
-            // Buscar el estado (status) en la tabla t_p_parameters basado en el nombre proporcionado en la fila actual.
-            $status = Parameter::where('name', $row[8])->first();
-
-            // Convertir el valor de la columna REQUERIDO en un booleano.
-            $required = strtolower($row[9]) === 'sí' || strtolower($row[9]) === 'si' || $row[9] === '1';
-
-            // Crear (o actualizar, si es necesario) un curso en la base de datos usando los datos de la fila actual.
-            Course::create([
-                'code'         => $row[0],
-                'shortname'    => $row[1],
-                'category'     => $row[2],
-                'hours'        => $row[3],
-                'start_date'   => \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[4]),
-                'end_date'     => \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[5]),
-                'provider_id'  => $provider ? $provider->id : null,
-                'specialty_id' => $specialty ? $specialty->id : null,
-                'status_id'    => $status ? $status->id : null,  // Usando el ID de la tabla t_p_parameters
-                'required'     => $required
-            ]);
-        }
     }
 }
+
