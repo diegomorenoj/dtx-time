@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\CoursesImport;
+use App\Imports\UserCoursesImport;
 
 
 class CourseController extends Controller
@@ -47,6 +48,39 @@ class CourseController extends Controller
         return response()->json($response, 200);
     }
 
+    public function userExcelImport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx'
+        ]);
+
+        try {
+            $import = new UserCoursesImport;
+            Excel::import($import, $request->file('file'));
+
+            $response = [
+                'success' => true,
+                'message' => 'Usuarios y Cursos importados con éxito!',
+                'errors' => $import->getNotFoundRows() // Lista de errores/warnings
+            ];
+    
+            if ($import->getNotFoundRows()) {
+                $response['success'] = false; // Puedes decidir si quieres marcar esto como false o dejarlo como true
+                $response['message'] = 'Importación completada con errores.';
+            }
+    
+            return response()->json($response, 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hubo un error al importar los usuarios y cursos. ' . $e->getMessage(),
+                'errors' => []
+            ], 500);
+        }
+    }
+
+
     public function excelImport(Request $request)
     {
 
@@ -60,8 +94,14 @@ class CourseController extends Controller
             // Usar la clase CoursesImport para importar los cursos desde el archivo Excel
             Excel::import(new CoursesImport, $request->file('file'));
 
-            // Retornar una respuesta exitosa
-            return response()->json(['message' => 'Cursos importados con éxito!'], 200);
+            $response = [
+                'success' => true,
+                'message' => 'Los usuarios se importaron con éxito!',
+                'errors' => '',
+            ];
+    
+            return response()->json($response, 200);
+            
         } catch (\Exception $e) {
             // Retornar un error si algo sale mal
             return response()->json(['message' => 'Hubo un error al importar los cursos. ' . $e->getMessage()], 500);
