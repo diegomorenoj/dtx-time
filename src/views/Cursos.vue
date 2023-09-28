@@ -35,24 +35,12 @@
             color="primary"
             min-width="100"
             class="mr-2"
-            @click="openImport(optionCourse)"
+            @click="dialogImportExcel = true"
           >
             <v-icon left>
               mdi-upload
             </v-icon>
-            Importar cursos
-          </v-btn>
-          <v-btn
-            v-if="userInfo.permits.IMPORT_USERS_COURSES"
-            small
-            color="info"
-            min-width="100"
-            @click="openImport(optionUser)"
-          >
-            <v-icon left>
-              mdi-upload
-            </v-icon>
-            Importar usuarios
+            Cargar Excel
           </v-btn>
         </div>
       </v-col>
@@ -278,6 +266,79 @@
         </v-data-table>
       </v-card-text>
     </material-card>
+    <!-- Cuadro de diálogo para cargar archivo de excel al servidor -->
+    <v-dialog
+      v-model="dialogImportExcel"
+      persistent
+      max-width="600px"
+    >
+      <material-card
+        full-header
+        light
+        inline
+        color="info"
+        class="mx-auto"
+      >
+        <template #heading>
+          <div class="text-center pa-5">
+            <div class="text-h4 white--text">
+              Importar Cursos (Excel)
+            </div>
+          </div>
+        </template>
+
+        <v-card-text>
+          <v-select
+            v-model="selectedFileType"
+            :items="['Cursos', 'Usuarios']"
+            label="Tipo de archivo"
+          />
+          <v-file-input
+            v-model="file"
+            label="Archivo"
+            :show-size="1000"
+          />
+          <div
+            v-if="errors"
+            :style="{ color: 'red', fontWeight: 'bold', backgroundColor: '#dfdfdf', marginTop: '10px', padding:'10px', fontSize: '18px' }"
+            v-html="errors"
+          />
+          <div
+            v-if="message"
+            :style="{ color: 'green', fontWeight: 'bold', backgroundColor: '#dfdfdf', marginTop: '10px', padding:'10px', fontSize: '18px' }"
+            v-html="message"
+          />
+          <v-progress-linear
+            v-if="progress > 0"
+            :value="progress"
+            rounded
+            class="mt-2"
+            height="25"
+          >
+            <strong>{{ Math.ceil(progress) }}%</strong>
+          </v-progress-linear>
+        </v-card-text>
+        <v-card-actions class="pa-3 justify-center mt-2">
+          <v-btn
+            small
+            color="error"
+            min-width="100"
+            @click="closeDialogImport"
+          >
+            Cerrar
+          </v-btn>
+          <v-btn
+            small
+            color="primary"
+            min-width="100"
+            @click="submitFile"
+          >
+            Subir
+          </v-btn>
+        </v-card-actions>
+      </material-card>
+    </v-dialog>
+    <!-- ----- -->
     <v-dialog
       v-model="displayDialog"
       persistent
@@ -665,6 +726,7 @@
 </template>
 
 <script>
+  import * as XLSX from 'xlsx';
   import CourseService from '../services/CourseService';
   import UserService from '../services/UserService';
   import ParameterService from '../services/ParameterService';
@@ -673,10 +735,14 @@
   import { get } from 'vuex-pathify';
   export default {
     name: 'CursosView',
+    validationErrors: [],
     components: {
       UploadDataComponent: () => import('../components/generic/UploadData') /* webpackChunkName: "default-drawer-toggle" */,
     },
     data: () => ({
+      selectedFileType: 'Cursos',
+      errors: '',
+      message: '',
       headers: [
         {
           text: 'ID del curso',
@@ -786,6 +852,7 @@
       search: undefined,
       overlay: false,
       displayDialog: false,
+      dialogImportExcel: false,
       disabled: false,
       isEdit: false,
       confirm: false,
@@ -850,6 +917,102 @@
       this.loadParameters();
     },
     methods: {
+      handleFileUpload () {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            const validationResult = this.selectedFileType === 'Cursos'
+              ? this.validateCourses(jsonData)
+              : this.validateUsers(jsonData);
+
+            resolve({
+              isValid: validationResult.isValid, // Aquí estaba el error
+              errors: validationResult.errors, // Aquí estaba el error
+            });
+          };
+
+          reader.onerror = (error) => {
+            reject(error);
+          };
+
+          reader.readAsArrayBuffer(this.file);
+        });
+      },
+      closeDialogImport () {
+        this.errors !== '' || this.message !== '' ? location.reload() : this.resetDialogValues();
+      },
+      resetDialogValues () {
+        // Aquí reseteas todos los valores del diálogo a sus valores por defecto
+        this.file = null;
+        this.errors = '';
+        this.message = '';
+        this.dialogImportExcel = false;
+        // Y cualquier otra variable que necesites resetear.
+      },
+      validateCourses (data) {
+        this.validationErrors = []; // Limpia los errores anteriores antes de una nueva validación
+
+        const columnsToCheck = [
+          { key: 'code', validation: val => typeof val === 'string', typeDescription: 'String' },
+          { key: 'shortname', validation: val => typeof val === 'string', typeDescription: 'String' },
+          { key: 'category', validation: val => typeof val === 'string', typeDescription: 'String' },
+          { key: 'hours', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'start_date', validation: val => typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val), typeDescription: 'Fecha (YYYY-MM-DD)' },
+          { key: 'end_date', validation: val => typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val), typeDescription: 'Fecha (YYYY-MM-DD)' },
+          { key: 'provider_id', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'specialty_id', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'status_id', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'required', validation: val => typeof val === 'string', typeDescription: 'String' },
+        ];
+
+        for (let index = 0; index < data.length; index++) {
+          const item = data[index];
+          const rowNumber = index + 2;
+
+          for (const col of columnsToCheck) {
+            if (!item[col.key] || !col.validation(item[col.key])) { // Verifica que no esté vacío y pasa la validación
+              const error = `Fila ${rowNumber}: Error en la columna '${col.key}'. El campo no puede estar vacío y debe ser del tipo '${col.typeDescription}'.`;
+              this.validationErrors.push(error);
+              return { isValid: false, errors: this.validationErrors };
+            }
+          }
+        }
+        return { isValid: true, errors: [] };
+      },
+      validateUsers (data) {
+        this.validationErrors = []; // Limpia los errores anteriores antes de una nueva validación
+
+        const columnsToCheck = [
+          { key: 'course_code', validation: val => typeof val === 'string', typeDescription: 'String' },
+          { key: 'user_email', validation: val => typeof val === 'string', typeDescription: 'String' },
+          { key: 'attend_how', validation: val => typeof val === 'string', typeDescription: 'String' },
+          { key: 'progress', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'qualification', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'hours', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'status', validation: val => typeof val === 'string', typeDescription: 'String' },
+        ];
+
+        for (let index = 0; index < data.length; index++) {
+          const item = data[index];
+          const rowNumber = index + 2; // Ajustado para compensar el encabezado de Excel
+
+          for (const col of columnsToCheck) {
+            if (!item[col.key] || !col.validation(item[col.key])) { // Verifica que no esté vacío y pasa la validación
+              const error = `Fila ${rowNumber}: Error en la columna '${col.key}'. El campo no puede estar vacío y debe ser del tipo '${col.typeDescription}'.`;
+              this.validationErrors.push(error);
+              return { isValid: false, errors: this.validationErrors };
+            }
+          }
+        }
+        return { isValid: true, errors: [] };
+      },
       loadData () {
         this.overlay = true;
         this.filter.user_id = this.userInfo.id;
@@ -862,6 +1025,80 @@
           console.log(error);
           this.overlay = false;
         });
+      },
+      async submitFile () {
+        if (!this.file) {
+          alert('Por favor, selecciona un archivo.');
+          return;
+        }
+        try {
+          // Aquí invocas handleFileUpload y guardas el resultado en validationResult
+          const validationResult = await this.handleFileUpload();
+
+          // Aquí verificas el resultado
+          if (!validationResult.isValid) {
+            this.snackbar = {
+              display: true,
+              title: 'ERROR: ',
+              type: 'error',
+              message: `El archivo tiene errores:\n\n${validationResult.errors.join('\n')}`,
+            };
+            return;
+          }
+
+          // Usar FormData para enviar el archivo a través de axios
+          const formData = new FormData();
+          formData.append('file', this.file);
+
+          // Simular progreso mientras se realiza la importación
+          const progressInterval = setInterval(() => {
+            if (this.progress < 95) { // 95 para evitar llegar a 100 antes de completar
+              this.progress += 2; // Incrementar el progreso en 5%
+            }
+          }, 600); // Actualizar cada 200ms
+
+          if (this.selectedFileType === 'Cursos') {
+            try {
+              const response = await this.courseService.importExcel(formData);
+
+              if (response.success === false && response.errors) {
+                const uniqueErrors = [...new Set(response.errors)];
+                this.errors = uniqueErrors.join('<br /> ');
+              } else {
+                this.message = 'Los curos se importaron con éxito';
+              }
+            } catch (error) {
+              if (error.response && error.response.data && error.response.data.errors) {
+                const uniqueErrors = [...new Set(error.response.data.errors)];
+                this.errors = uniqueErrors.join('<br /> ');
+              } else {
+                this.errors = 'Hubo un error durante la importación.';
+              }
+            }
+          } else {
+            try {
+              const response = await this.userService.importExcel(formData);
+
+              if (response.success === false && response.errors) {
+                const uniqueErrors = [...new Set(response.errors)];
+                this.errors = uniqueErrors.join('<br /> ');
+              } else {
+                this.message = 'Los usuarios se importaron con éxito';
+              }
+            } catch (error) {
+              if (error.response && error.response.data && error.response.data.errors) {
+                const uniqueErrors = [...new Set(error.response.data.errors)];
+                this.errors = uniqueErrors.join('<br /> ');
+              } else {
+                this.errors = 'Hubo un error durante la importación.';
+              }
+            }
+          }
+          clearInterval(progressInterval); // Detener la simulación del progreso
+          this.progress = 100; // Marcar como completo al finalizar
+        } catch (error) {
+          console.error('Error al subir el archivo:', error);
+        }
       },
       loadParameters () {
         this.overlay = true;

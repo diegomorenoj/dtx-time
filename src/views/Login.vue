@@ -73,7 +73,7 @@
 
   import AuthService from '../services/AuthService';
   import { get, sync } from 'vuex-pathify';
-  
+
   export default {
     name: 'LoginView',
 

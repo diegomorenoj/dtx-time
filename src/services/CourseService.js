@@ -24,6 +24,12 @@ export default class CourseService {
         });
     }
 
+    importExcel (data) {
+        return axios.post(`${process.env.VUE_APP_RUTA_API}/courses/excelimport`, data).then(res => {
+            return res.data;
+        });
+    }
+
     create (data) {
         return axios.post(`${process.env.VUE_APP_RUTA_API}/courses`, data).then(res => {
             return res.data;
