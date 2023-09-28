@@ -23,6 +23,10 @@ class Course extends Model
         'start_date',
         'end_date',
         'provider_id',
-        'training_request_id'
+        'training_request_id',
+        'specialty_id',
+        'status_id',
+        'required',
     ];
+  
 }
