@@ -993,9 +993,9 @@
           { key: 'course_code', validation: val => typeof val === 'string', typeDescription: 'String' },
           { key: 'user_email', validation: val => typeof val === 'string', typeDescription: 'String' },
           { key: 'attend_how', validation: val => typeof val === 'string', typeDescription: 'String' },
-          { key: 'progress', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
-          { key: 'qualification', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
-          { key: 'hours', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'progress', validation: val => val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'qualification', validation: val => val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'hours', validation: val => val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
           { key: 'status', validation: val => typeof val === 'string', typeDescription: 'String' },
         ];
 
@@ -1004,6 +1004,7 @@
           const rowNumber = index + 2; // Ajustado para compensar el encabezado de Excel
 
           for (const col of columnsToCheck) {
+            console.log(`${col.key} value: ${item[col.key]}, type: ${typeof item[col.key]}`);
             if (!item[col.key] || !col.validation(item[col.key])) { // Verifica que no esté vacío y pasa la validación
               const error = `Fila ${rowNumber}: Error en la columna '${col.key}'. El campo no puede estar vacío y debe ser del tipo '${col.typeDescription}'.`;
               this.validationErrors.push(error);

@@ -18,6 +18,18 @@ export default class ParameterService {
         });
     }
 
+    filterSpecialties (val) {
+        return axios.get(`${process.env.VUE_APP_RUTA_API}/specialties/filterspecialties/${val}`).then(res => {
+            return res.data;
+        });
+    }
+
+    filterByUserName (val) {
+        return axios.get(`${process.env.VUE_APP_RUTA_API}/parameters/filternameusers/${val}`).then(res => {
+            return res.data;
+        });
+    }
+
     filterUsers (val) {
         return axios.get(`${process.env.VUE_APP_RUTA_API}/parameters/filterusers/${val}`).then(res => {
             return res.data;

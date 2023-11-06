@@ -32,22 +32,10 @@ const state = {
       permit: 'MENU_COURSES',
     },
     {
-      title: 'Objetivos Generales',
+      title: 'Objetivos',
       icon: 'mdi-stairs-up',
       to: '/objectives/general',
-      permit: 'MENU_OBJETIVES_GENERAL',
-    },
-    {
-      title: 'Objetivos Especialidad',
-      icon: 'mdi-gesture-swipe-up',
-      to: '/objectives/specialty',
-      permit: 'MENU_OBJETIVES_SPECIALTY',
-    },
-    {
-      title: 'Informe Objetivos',
-      icon: 'mdi-developer-board',
-      to: '/objectives/report',
-      permit: 'MENU_OBJETIVES_REPORT',
+      permit: 'INDIVIDUAL_REPORT',
     },
     {
       title: 'Especialidades',
