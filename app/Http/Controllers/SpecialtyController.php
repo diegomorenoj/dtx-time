@@ -25,7 +25,26 @@ class SpecialtyController extends Controller
             'data' => $data,
             'message' => 'List Specialties Successfully'
         ];
-        
+
+        return response()->json($response, 200);
+    }
+
+    public function getFilterSpecialties($val)
+    {
+        $_val = $val === null ? '%%' :  $val . '%';
+
+        $data = Specialty::query()
+            ->where(function ($query) use ($_val) {
+                $query->whereRaw('UPPER(name) LIKE UPPER(?)', [$_val]);
+            })
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $response = [
+            'count' => $data->count(),
+            'entries' => $data
+        ];
+
         return response()->json($response, 200);
     }
 
@@ -37,17 +56,18 @@ class SpecialtyController extends Controller
      */
     public function getByFilter(Request $request)
     {
-        $input = $request->all();      
+        $input = $request->all();
         $name = $input['name'] === null ? '%%' : $input['name'];
 
         $data = DB::table('specialties AS s')
             ->select(
-                's.*'
-                , DB::raw('(SELECT COUNT(*) FROM user_specialties u WHERE u.specialty_id = s.id) AS users_count') // ajustar
-                , DB::raw('null AS users')
+                's.*',
+                DB::raw('(SELECT COUNT(*) FROM user_specialties u WHERE u.specialty_id = s.id) AS users_count') // ajustar
+                ,
+                DB::raw('null AS users')
             )
-            ->whereRaw('UPPER(s.name) LIKE UPPER("'.$name.'")')
-            ->orderBy('s.created_at','desc')
+            ->whereRaw('UPPER(s.name) LIKE UPPER("' . $name . '")')
+            ->orderBy('s.created_at', 'desc')
             ->get();
 
         // AJUSTAR
@@ -59,17 +79,17 @@ class SpecialtyController extends Controller
                 ->join('users AS u', 'u.id', '=', 'us.user_id')
                 ->select('u.*')
                 ->where('us.specialty_id', $item->id)
-                ->get();   
-            
+                ->get();
+
             $item->users = $users;
         }
-        
+
         $response = [
             'success' => true,
             'data' => $data,
             'message' => 'List Specialties Successfully'
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -111,8 +131,7 @@ class SpecialtyController extends Controller
 
         // AJUSTAR
         // RELACIÓN DE USAURIOS
-        if($input['users'] != null)
-        {
+        if ($input['users'] != null) {
             foreach ($input['users'] as $item) {
                 $userSpecialty = new UserSpecialty;
                 $userSpecialty->user_id = $item['id'];
@@ -120,7 +139,7 @@ class SpecialtyController extends Controller
                 $userSpecialty->save();
             }
         }
-        
+
         $response = [
             'success' => true,
             'data' => $data,
@@ -171,8 +190,7 @@ class SpecialtyController extends Controller
         // BORRAR LA RELACIÓN
         UserSpecialty::where('specialty_id', $specialty->id)->delete();
 
-        if($input['users'] != null)
-        {
+        if ($input['users'] != null) {
             foreach ($input['users'] as $item) {
                 $userSpecialty = new UserSpecialty;
                 $userSpecialty->user_id = $item['id'];
@@ -219,8 +237,7 @@ class SpecialtyController extends Controller
         $user = User::where('email', $input['email'])->first();
 
         // RELACIÓN DE USAURIOS
-        if(is_null($user))
-        {
+        if (is_null($user)) {
             $response = [
                 'success' => false,
                 'data' => null,
@@ -228,20 +245,17 @@ class SpecialtyController extends Controller
             ];
 
             return response()->json($response, 200);
-        }
-        else
-        {
+        } else {
             // VALIDAR SI ES IMPORTACIÓN INDIVIDUAL O GRUPAL
             $_id = $id == null || $id == 'null' ? isset($input['specialty_id']) ? $input['specialty_id'] : null : $id;
 
-            if($_id == null)
-            {
+            if ($_id == null) {
                 $response = [
                     'success' => false,
                     'data' => null,
                     'message' => 'No ha diligenciado la espacialidad para el usuario con el correo => ' . $input['email']
                 ];
-    
+
                 return response()->json($response, 200);
             }
 
@@ -253,18 +267,15 @@ class SpecialtyController extends Controller
                 ->where('us.specialty_id', $_id)
                 ->get();
 
-            if($resp->count() > 0)
-            {
+            if ($resp->count() > 0) {
                 $response = [
                     'success' => false,
                     'data' => null,
                     'message' => 'El usuario con el correo => ' . $input['email'] . ' ya esta relacionado con la especialidad'
                 ];
-    
+
                 return response()->json($response, 200);
-            }
-            else
-            {
+            } else {
 
                 $userSpecialty = new UserSpecialty;
                 $userSpecialty->user_id = $user->id;
@@ -276,7 +287,7 @@ class SpecialtyController extends Controller
         $response = [
             'success' => true,
             'data' => $user,
-            'message' => 'Usuario => ' . $input['email'] .', importado correctamente.'
+            'message' => 'Usuario => ' . $input['email'] . ', importado correctamente.'
         ];
 
         return response()->json($response, 200);
@@ -293,7 +304,7 @@ class SpecialtyController extends Controller
 
         // BORRAR LA RELACIÓN
         UserSpecialty::where('specialty_id', $specialty->id)->delete();
-        
+
         $specialty->delete();
         $data = null;
 

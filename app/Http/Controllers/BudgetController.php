@@ -6,6 +6,7 @@ use JWTAuth;
 use Validator;
 use App\Models\Budget;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 class BudgetController extends Controller
@@ -27,60 +28,8 @@ class BudgetController extends Controller
      */
     public function index()
     {
-        // $data = Budget::all();
-        // available_budget
-        // used_budget
-
-        // PARA EL ROL 4: Encargado de oficina o %: Socio
-        if ($this->user->rol_id == 4 || $this->user->rol_id == 5) {
-            $data = DB::table('budgets AS b')
-            ->select(
-                'b.anio'
-                , 'b.city'
-                , DB::raw('SUM(value) AS value')
-                , DB::raw('(SELECT SUM(bg.value) FROM budgets bg WHERE bg.anio = b.anio AND bg.area IS NOT NULL AND bg.city IS NOT NULL) AS used_budget')
-                , DB::raw("(SELECT SUM(t.fee) FROM training_requests t WHERE t.deleted = 'N' AND b.anio BETWEEN DATE_FORMAT(t.start_date,'%Y') AND DATE_FORMAT(t.end_date,'%Y')) AS executed_budget")
-                , DB::raw('0 AS available_budget')
-                , DB::raw('null AS budgets')
-            )
-            ->whereRaw('b.city LIKE "'.$this->user->city.'"')
-            ->groupBy('b.anio', 'b.city')
-            //->orderBy('b.created_at', 'desc')
-            ->get();
-        } else {
-            $data = DB::table('budgets AS b')
-            ->select(
-                'b.anio'
-                , 'b.city'
-                , DB::raw('SUM(value) AS value')
-                , DB::raw('(SELECT SUM(bg.value) FROM budgets bg WHERE bg.anio = b.anio AND bg.area IS NOT NULL AND bg.city IS NOT NULL) AS used_budget')
-                , DB::raw("(SELECT SUM(t.fee) FROM training_requests t WHERE t.deleted = 'N' AND b.anio BETWEEN DATE_FORMAT(t.start_date,'%Y') AND DATE_FORMAT(t.end_date,'%Y')) AS executed_budget")
-                , DB::raw('0 AS available_budget')
-                , DB::raw('null AS budgets')
-            )
-            ->whereNull('city')
-            ->whereNull('area')
-            ->orderBy('b.created_at', 'desc')
-            ->get();
-        }
-
-        foreach ($data as $item) {
-            // PRESUPUESTO DISPONIBLE
-            $item->available_budget = ($item->value - $item->used_budget);
-
-            // DISTRIBUCIÓN PRESUPUESTO
-            $budgets = DB::table('budgets AS b')
-                ->select('b.*')
-                ->where('b.anio', $item->anio)
-                ->whereNotNull('city')
-                //->whereNotNull('area')
-                ->orderBy('b.created_at', 'desc')
-                ->get();
-            
-            $item->budgets = $budgets;
-        }
         
-
+        $data = Budget::get();
         $response = [
             'success' => true,
             'data' => $data,
@@ -89,6 +38,44 @@ class BudgetController extends Controller
         
         return response()->json($response, 200);
     }
+     
+    public function MainBudgets()
+    {       
+        log::info("---- presupuesto principal -----");
+
+        $mainBudgets = Budget::where('is_main', true)->get();
+
+        
+        $response = [
+            'success' => true,
+            'data' => $mainBudgets,
+            'message' => 'List Budgets Successfully'
+        ];
+        return response()->json($response, 200);
+    }
+
+    /**
+     * Store a new Budget
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     * 
+     */
+    public function store(Request $request) {
+        
+        $input = $request->all();
+        log::info($input);
+        $budget = Budget::create($input);
+
+        $response = [
+            'success' => true,
+            'data' => $budget,
+            'message' => "Success Created!"
+        ];
+
+        return response()->json($response, 200);
+
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -96,7 +83,7 @@ class BudgetController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function storeOld(Request $request)
     {
         try
         {

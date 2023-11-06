@@ -36,14 +36,42 @@ class ParameterController extends Controller
      */
     public function getByType($tp_parameter_id)
     {
-        $data = Parameter::where('tp_parameter_id', $tp_parameter_id)->orderBy('id','asc')->get();
+        $data = Parameter::where('tp_parameter_id', $tp_parameter_id)->orderBy('id', 'asc')->get();
 
         $response = [
             'success' => true,
             'data' => $data,
             'message' => 'List Parameters Successfully'
         ];
-        
+
+        return response()->json($response, 200);
+    }
+
+
+    /**
+     * Display a listing of the users by filter name.
+     *
+     * @param  String  $val
+     * @return \Illuminate\Http\Response
+     */
+    public function filterByNameUser($val)
+    {
+        $_val = $val === null ? '%%' :  $val . '%';
+
+        $data = DB::table('users AS u')
+            ->select('u.*')
+            ->where(function ($query) use ($_val) {
+                $query->where(DB::raw('UPPER(u.name)'), 'LIKE', strtoupper($_val))
+                    ->orWhere(DB::raw('UPPER(u.lastname)'), 'LIKE', strtoupper($_val));
+            })
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $response = [
+            'count' => $data->count(),
+            'entries' => $data
+        ];
+
         return response()->json($response, 200);
     }
 
@@ -60,8 +88,8 @@ class ParameterController extends Controller
 
         $data = DB::table('users AS u')
             ->select('u.*')
-            ->whereRaw('(UPPER(u.name) LIKE UPPER("'.$_val.'") OR UPPER(u.lastname) LIKE UPPER("'.$_val.'"))')
-            ->whereRaw('u.city LIKE "'.$city.'"')
+            ->whereRaw('(UPPER(u.name) LIKE UPPER("' . $_val . '") OR UPPER(u.lastname) LIKE UPPER("' . $_val . '"))')
+            ->whereRaw('u.city LIKE "' . $city . '"')
             ->orderBy('name', 'asc')
             ->get();
 
@@ -69,7 +97,7 @@ class ParameterController extends Controller
             'count' => $data->count(),
             'entries' => $data
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -79,7 +107,7 @@ class ParameterController extends Controller
 
         $data = DB::table('users AS u')
             ->select('u.city')
-            ->whereRaw('UPPER(u.city) LIKE UPPER("'.$_val.'")')
+            ->whereRaw('UPPER(u.city) LIKE UPPER("' . $_val . '")')
             ->orderBy('city', 'asc')
             ->distinct()
             ->get();
@@ -88,7 +116,7 @@ class ParameterController extends Controller
             'count' => $data->count(),
             'entries' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -98,7 +126,7 @@ class ParameterController extends Controller
 
         $data = DB::table('users AS u')
             ->select('u.area')
-            ->whereRaw('UPPER(u.area) LIKE UPPER("'.$_val.'")')
+            ->whereRaw('UPPER(u.area) LIKE UPPER("' . $_val . '")')
             ->orderBy('area', 'asc')
             ->distinct()
             ->get();
@@ -107,7 +135,7 @@ class ParameterController extends Controller
             'count' => $data->count(),
             'entries' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -117,7 +145,7 @@ class ParameterController extends Controller
 
         $data = DB::table('users AS u')
             ->select('u.position')
-            ->whereRaw('UPPER(u.position) LIKE UPPER("'.$_val.'")')
+            ->whereRaw('UPPER(u.position) LIKE UPPER("' . $_val . '")')
             ->orderBy('position', 'asc')
             ->distinct()
             ->get();
@@ -126,7 +154,7 @@ class ParameterController extends Controller
             'count' => $data->count(),
             'entries' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -136,7 +164,7 @@ class ParameterController extends Controller
 
         $data = DB::table('users AS u')
             ->select('u.level')
-            ->whereRaw('UPPER(u.level) LIKE UPPER("'.$_val.'")')
+            ->whereRaw('UPPER(u.level) LIKE UPPER("' . $_val . '")')
             ->orderBy('level', 'asc')
             ->distinct()
             ->get();
@@ -145,7 +173,7 @@ class ParameterController extends Controller
             'count' => $data->count(),
             'entries' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -155,8 +183,8 @@ class ParameterController extends Controller
 
         $data = DB::table('users AS u')
             ->select('u.area')
-            ->whereRaw('UPPER(u.city) = UPPER("'.$city.'")')
-            ->whereRaw('UPPER(u.area) LIKE UPPER("'.$_val.'")')
+            ->whereRaw('UPPER(u.city) = UPPER("' . $city . '")')
+            ->whereRaw('UPPER(u.area) LIKE UPPER("' . $_val . '")')
             ->orderBy('area', 'asc')
             ->distinct()
             ->get();
@@ -165,7 +193,7 @@ class ParameterController extends Controller
             'count' => $data->count(),
             'entries' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -181,7 +209,7 @@ class ParameterController extends Controller
         $response = [
             'data' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -189,7 +217,7 @@ class ParameterController extends Controller
     {
         $data = DB::table('users AS u')
             ->select('u.position')
-            ->whereRaw('UPPER(u.area) = UPPER("'.$area.'")')
+            ->whereRaw('UPPER(u.area) = UPPER("' . $area . '")')
             ->whereNotNull('position')
             ->orderBy('position', 'asc')
             ->distinct()
@@ -198,7 +226,7 @@ class ParameterController extends Controller
         $response = [
             'data' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -206,7 +234,7 @@ class ParameterController extends Controller
     {
         $data = DB::table('users AS u')
             ->select('u.level')
-            ->whereRaw('UPPER(u.position) = UPPER("'.$position.'")')
+            ->whereRaw('UPPER(u.position) = UPPER("' . $position . '")')
             ->whereNotNull('level')
             ->orderBy('level', 'asc')
             ->distinct()
@@ -215,7 +243,7 @@ class ParameterController extends Controller
         $response = [
             'data' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -262,37 +290,37 @@ class ParameterController extends Controller
         switch ($this->user->rol_id) {
             case 1: // 1	Administrador
                 $states[] = 1;
-                if($trainingRequest->type == $this->payment) $states[] = 2;
+                if ($trainingRequest->type == $this->payment) $states[] = 2;
                 $states[] = 3;
-                if($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
+                if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
                 $states[] = 5;
                 // SOLO SI ES MAYOR AL LIMITE
-                if($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6;
-                if($trainingRequest->type == $this->payment) $states[] = 7; // SOLO PAGAS
+                if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6;
+                if ($trainingRequest->type == $this->payment) $states[] = 7; // SOLO PAGAS
                 $states[] = 8;
-                if($pre_en_curso->count() > 0) $states[] = 9;
-                if($pre_completada_revision->count() > 0) $states[] = 10;
-                if($pre_completada->count() > 0) $states[] = 11;
+                if ($pre_en_curso->count() > 0) $states[] = 9;
+                if ($pre_completada_revision->count() > 0) $states[] = 10;
+                if ($pre_completada->count() > 0) $states[] = 11;
                 break;
-        
+
             case 2: // 2	Usuario general
-                if($pre_en_curso->count() > 0) $states[] = 9;
-                if($pre_completada_revision->count() > 0) $states[] = 10;
+                if ($pre_en_curso->count() > 0) $states[] = 9;
+                if ($pre_completada_revision->count() > 0) $states[] = 10;
                 break;
-        
+
             case 3: // 3	Capacitaciones
                 $states[] = 1;
                 // SOLO PAGAS MENORES O IGUALES AL LIMITE
-                if($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2;
-                if($pre_en_curso->count() > 0) $states[] = 9;
-                if($pre_completada->count() > 0) $states[] = 11;
+                if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2;
+                if ($pre_en_curso->count() > 0) $states[] = 9;
+                if ($pre_completada->count() > 0) $states[] = 11;
                 break;
-        
+
             case 4: // 4	Encargado de oficina
                 $states[] = 5;
                 $states[] = 8;
                 break;
-        
+
             case 5: // 5	Socio
                 $states[] = 0;
                 // CURSOS DE LA CIUDAD DE MEXICO
@@ -301,36 +329,36 @@ class ParameterController extends Controller
                     $states[] = 8;
                 }
                 break;
-        
+
             case 6: // 6	Socio de capacitaciones
-                
+
                 $states[] = 8;
                 // CURSOS DE LA CIUDAD DE MEXICO
                 if (str_contains($city_name, $this->city_mx)) {
-                    if($trainingRequest->type == $this->free || ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 4; // SOLO SI ES GRATIS
+                    if ($trainingRequest->type == $this->free || ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 4; // SOLO SI ES GRATIS
                 } else {
-                    if($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2; // SOLO PAGAS MENORES O IGUALES AL LIMITE
-                    if($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
-                    if($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6; // SOLO SI ES MAYOR AL LIMITE
-                    if($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 7; // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2; // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                    if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6; // SOLO SI ES MAYOR AL LIMITE
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 7; // SOLO PAGAS MENORES O IGUALES AL LIMITE
                 }
                 break;
-        
+
             case 7: // 7	Socio Director
                 // CURSOS DE LA CIUDAD DE MEXICO
                 if (str_contains($city_name, $this->city_mx)) {
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit){
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) {
                         $states[] = 4;
                         $states[] = 8;
-                    } 
+                    }
                 } else {
-                    if($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 2;
-                    if($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 7; // SOLO PAGAS MAYOR AL LIMITE
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 2;
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 7; // SOLO PAGAS MAYOR AL LIMITE
                     $states[] = 8;
                 }
-                
+
                 break;
-        
+
             case 8: // 8	Finanzas
                 $states[] = 3;
                 break;
@@ -340,20 +368,16 @@ class ParameterController extends Controller
         $states[] = $trainingRequest->status_id;
 
         $data = DB::table('parameters')
-                    ->whereIn('id', $states)
-                    ->orderBy('id','asc')
-                    ->get();
+            ->whereIn('id', $states)
+            ->orderBy('id', 'asc')
+            ->get();
 
         $response = [
             'success' => true,
             'data' => $data,
             'message' => 'List Parameters Successfully'
         ];
-        
+
         return response()->json($response, 200);
-
     }
-
-    
-
 }

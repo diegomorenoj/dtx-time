@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Repositories\LdapRepository;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -125,6 +126,19 @@ class UserController extends Controller
             // The user didn't supply a password.
             return response()->json(['error' => 'Contraseña'], 500);
         }
+    }
+
+    public function getCities() {
+        $cities = User::distinct()->pluck('city');
+        log::info("ciudades");
+        log::info($cities);
+        $response = [
+            'success' => true,
+            'data' => $cities,
+            'message' => 'List Cities Successfully'
+        ];
+        
+        return response()->json($response, 200);
     }
 
     public function getAuthenticatedUser()
@@ -576,7 +590,7 @@ class UserController extends Controller
                 // PARA OBJETIVOS
                 $permits->CREATE_OBJETIVES = false;
                 $permits->UPDATE_OBJETIVES = false;
-                $permits->DELETE_OBJETIVES = false;
+                $permits->DELETE_OBJETIVES = false;                
                 // PARA PRESUPUESTOS
                 $permits->CREATE_BUDGETS = true;
                 $permits->UPDATE_BUDGETS = true;

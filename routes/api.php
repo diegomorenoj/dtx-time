@@ -29,6 +29,7 @@ use App\Http\Controllers\TrainingRequestsCommentsController;
 // RUTAS SIN AUTENTICACIÓN
 Route::post('users/register', 'App\Http\Controllers\UserController@register');
 Route::post('users/login', 'App\Http\Controllers\UserController@authenticate');
+Route::get('users/cities', 'App\Http\Controllers\UserController@getCities');
 
 // RUTAS CON AUTENTICACIÓN
 Route::group(['middleware' => ['jwt.verify']], function() {
@@ -60,6 +61,7 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::resource('rols', RolController::class);
     Route::resource('specialties', SpecialtyController::class);
     Route::post('specialties/filter', 'App\Http\Controllers\SpecialtyController@getByFilter');
+    Route::get('specialties/filterspecialties/{val}','App\Http\Controllers\SpecialtyController@getFilterSpecialties');
     Route::put('specialties/excel/{id}', 'App\Http\Controllers\SpecialtyController@storeExcel');
     Route::resource('providers', ProviderController::class);
     Route::resource('trainings', TrainingRequestController::class);
@@ -75,6 +77,9 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::post('courses/excel/user', 'App\Http\Controllers\CourseController@storeUsersExcel');
     Route::post('courses/excelimport', 'App\Http\Controllers\CourseController@excelImport');
     Route::post('courses/userExcelImport', 'App\Http\Controllers\CourseController@userExcelImport');
+
+    Route::post('objetives/courseAll', 'App\Http\Controllers\ObjectiveController@getAllCourses');
+    Route::post('objetives/objetivesExcelImport', 'App\Http\Controllers\ObjectiveController@ObjectiveExcelImport');
     Route::resource('objetives', ObjectiveController::class);
     Route::post('objetives/filter', 'App\Http\Controllers\ObjectiveController@getByFilter');
     Route::post('objetives/filtergeneral', 'App\Http\Controllers\ObjectiveController@getByFilterGeneral');
@@ -83,14 +88,19 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::resource('comments', TrainingRequestsCommentsController::class);
     Route::resource('files', FileController::class);
     Route::resource('constancies', ConstancyController::class);
-    Route::resource('budgets', BudgetController::class);
+    
+    
     Route::get('cycles', 'App\Http\Controllers\CycleController@index');
+    
+    Route::get('budgets/mainbudgets', 'App\Http\Controllers\BudgetController@MainBudgets');
+    Route::get('budgets', 'App\Http\Controllers\BudgetController@index');  
     Route::post('budgets/store', 'App\Http\Controllers\BudgetController@storeBudgets');
+    Route::post('budgets/storemain', 'App\Http\Controllers\BudgetController@store');
     
     Route::get('parameters/areas/all','App\Http\Controllers\ParameterController@getAllAreas');
     Route::get('parameters/positions/area/{area}','App\Http\Controllers\ParameterController@getPositionsByArea');
     Route::get('parameters/levels/position/{position}','App\Http\Controllers\ParameterController@getLevelsByPosition');
-    
+    Route::get('parameters/filternameusers/{val}','App\Http\Controllers\ParameterController@filterByNameUser');
     Route::get('parameters/filterusers/{val}','App\Http\Controllers\ParameterController@filterUsers');
     Route::get('parameters/filtercities/{val}','App\Http\Controllers\ParameterController@filterCities');
     Route::get('parameters/filterareas/{val}','App\Http\Controllers\ParameterController@filterAreas');
