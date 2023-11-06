@@ -65,7 +65,6 @@ const router = new Router({
       route('Presupuesto', null, 'config/budget'),
       // OBJETIVOS
       route('Objetivos Generales', null, 'objectives/general'),
-      route('Objetivos Especialidad', null, 'objectives/specialty'),
       route('Informe Objetivos', null, 'objectives/report'),
       // ESPECIALIDADES
       route('Especialidades', null, 'config/specialties'),
