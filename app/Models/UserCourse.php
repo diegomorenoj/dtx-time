@@ -24,4 +24,9 @@ class UserCourse extends Model
         'status',
         'objective_id'
     ];
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
 }

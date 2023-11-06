@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\TrainingRequestsLog;
 use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\File as Fil;
+use Illuminate\Support\Facades\Log;
 
 class TrainingRequestController extends Controller
 {
@@ -43,21 +44,22 @@ class TrainingRequestController extends Controller
      */
     public function index()
     {
+        Log::info('Entra INDEX');
         $data = DB::table('training_requests AS t')
             ->join('users AS u', 'u.id', '=', 't.user_id')
             ->join('parameters AS p', 'p.id', '=', 't.status_id')
             ->select(
-                't.*'
-                , 'u.lastname'
-                , 'u.area'
-                , 'u.city'
-                , 'u.position'
-                , 'p.name AS status_name'
-                , DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date')
-                , DB::raw('null AS users')
+                't.*',
+                'u.lastname',
+                'u.area',
+                'u.city',
+                'u.position',
+                'p.name AS status_name',
+                DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date'),
+                DB::raw('null AS users')
             )
             ->where('t.deleted', 'N')
-            ->orderBy('t.created_at','desc')
+            ->orderBy('t.created_at', 'desc')
             ->get();
 
         foreach ($data as $item) {
@@ -68,18 +70,18 @@ class TrainingRequestController extends Controller
                 ->join('users AS u', 'u.id', '=', 't.user_id')
                 ->select('u.*')
                 ->where('t.training_request_id', $item->id)
-                ->get();   
-            
+                ->get();
+
             $item->users = $users;
         }
-        
+
 
         $response = [
             'success' => true,
             'data' => $data,
             'message' => 'List Training Requests Successfully'
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -89,20 +91,20 @@ class TrainingRequestController extends Controller
             ->join('users AS u', 'u.id', '=', 't.user_id')
             ->join('parameters AS p', 'p.id', '=', 't.status_id')
             ->select(
-                't.*'
-                , 'u.lastname'
-                , 'u.area'
-                , 'u.city'
-                , 'u.position'
-                , 'p.name AS status_name'
-                , DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date')
-                , DB::raw('null AS users'),
+                't.*',
+                'u.lastname',
+                'u.area',
+                'u.city',
+                'u.position',
+                'p.name AS status_name',
+                DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date'),
+                DB::raw('null AS users'),
             )
             ->where('t.deleted', 'N')
-            ->whereRaw('(t.user_id LIKE "'.$user_id.'" OR COALESCE(t.create_user_id, "") LIKE UPPER("'.$create_user_id.'") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "'.$user_id.'"))')
-            ->orderBy('t.created_at','desc')
+            ->whereRaw('(t.user_id LIKE "' . $user_id . '" OR COALESCE(t.create_user_id, "") LIKE UPPER("' . $create_user_id . '") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "' . $user_id . '"))')
+            ->orderBy('t.created_at', 'desc')
             ->get();
-        
+
         foreach ($data as $item) {
             // --------------------------------------------------------------------------------------
             // USUARIOS ASOCIADOS
@@ -111,18 +113,18 @@ class TrainingRequestController extends Controller
                 ->join('users AS u', 'u.id', '=', 't.user_id')
                 ->select('u.*')
                 ->where('t.training_request_id', $item->id)
-                ->get();   
-            
+                ->get();
+
             $item->users = $users;
         }
-        
+
 
         $response = [
             'success' => true,
             'data' => $data,
             'message' => 'List Training Requests Successfully'
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -149,25 +151,23 @@ class TrainingRequestController extends Controller
             $create_user_id = '%%';
 
             // VALIDAR EL USUARIO
-            if($this->user->rol_id === 2 || $this->user->rol_id === 5)
-            {
+            if ($this->user->rol_id === 2 || $this->user->rol_id === 5) {
                 $user_id = $this->user->id; // SOLO LO DE CADA UNO
                 $create_user_id = $this->user->id;
             } else { // AL 1: ADMIN Y AL ROL 3: CAPACITACIONES SE LE CARGAN TODAS
-                if($input['user_id'] == null || $this->user->rol_id === 1 || $this->user->rol_id === 3) {
+                if ($input['user_id'] == null || $this->user->rol_id === 1 || $this->user->rol_id === 3) {
                     $user_id = '%%';
                 } else {
                     $user_id = $input['user_id'];
                 }
             }
-            
+
             // VALIDAR LA CIUDAD
-            if($this->user->rol_id == 4)// PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
+            if ($this->user->rol_id == 4) // PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
             {
                 $city = $this->user->city;
-            }
-            else $city = $input['city'] === null ? '%%' : $input['city'];
-            
+            } else $city = $input['city'] === null ? '%%' : $input['city'];
+
             // El rol 8: Finanzas Debe poder ver las type => P y las de el
             if ($this->user->rol_id === 8) {
                 $user_id = '%%'; // SOLO LO DE EL
@@ -181,124 +181,120 @@ class TrainingRequestController extends Controller
             }
 
             // El rol 7: Socio Director Debe poder ver las type => P y las que que superen los 50
-            if($this->user->rol_id === 7)
-            {
+            if ($this->user->rol_id === 7) {
                 $user_id = '%%';
                 $type = 'P';
                 $price = 50000;
 
-                if($input['range'] !== null)
-                {
+                if ($input['range'] !== null) {
                     $trainings = DB::table('training_requests AS t')
                         ->join('users AS u', 'u.id', '=', 't.user_id')
                         ->join('parameters AS p', 'p.id', '=', 't.status_id')
                         ->select(
-                            't.*'
-                            , 'u.lastname'
-                            , 'u.area'
-                            , 'u.city'
-                            , 'u.position'
-                            , 'p.name AS status_name'
-                            , DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date')
-                            , DB::raw('null AS users')
+                            't.*',
+                            'u.lastname',
+                            'u.area',
+                            'u.city',
+                            'u.position',
+                            'p.name AS status_name',
+                            DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date'),
+                            DB::raw('null AS users')
                         )
-                        ->whereRaw("DATE_FORMAT(t.created_at,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
+                        ->whereRaw("DATE_FORMAT(t.created_at,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
                         ->where('t.deleted', 'N')
-                        ->whereRaw('(t.user_id LIKE "'.$user_id.'" OR COALESCE(t.create_user_id, "") LIKE UPPER("'.$create_user_id.'") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "'.$user_id.'"))')
-                        ->whereRaw('(UPPER(u.name) LIKE UPPER("'.$user_name.'") OR UPPER(u.lastname) LIKE UPPER("'.$user_name.'"))')
-                        ->whereRaw('(UPPER(t.name) LIKE UPPER("'.$name.'") OR UPPER(t.shortname) LIKE UPPER("'.$name.'"))')
-                        ->whereRaw('UPPER(u.area) LIKE UPPER("'.$area.'")')
-                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("'.$group.'")')
-                        ->whereRaw('UPPER(u.position) LIKE UPPER("'.$position.'")')
-                        ->whereRaw('UPPER(u.city) LIKE UPPER("'.$city.'")')
-                        ->whereRaw('t.status_id LIKE "'.$status_id.'"')
-                        ->whereRaw('t.type LIKE "'.$type.'"') // para ver las pagas
-                        ->whereRaw('t.fee > '.$price) // para ver las pagas mayores a 50000
-                        ->orderBy('t.created_at','desc')
-                        ->get();
-                }
-                else
-                {
-                    $trainings = DB::table('training_requests AS t')
-                        ->join('users AS u', 'u.id', '=', 't.user_id')
-                        ->join('parameters AS p', 'p.id', '=', 't.status_id')
-                        ->select(
-                            't.*'
-                            , 'u.lastname'
-                            , 'u.area'
-                            , 'u.city'
-                            , 'u.position'
-                            , 'p.name AS status_name'
-                            , DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date')
-                            , DB::raw('null AS users')
-                        )
-                        ->where('t.deleted', 'N')
-                        ->whereRaw('(t.user_id LIKE "'.$user_id.'" OR COALESCE(t.create_user_id, "") LIKE UPPER("'.$create_user_id.'") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "'.$user_id.'"))')
-                        ->whereRaw('(UPPER(u.name) LIKE UPPER("'.$user_name.'") OR UPPER(u.lastname) LIKE UPPER("'.$user_name.'"))')
-                        ->whereRaw('(UPPER(t.name) LIKE UPPER("'.$name.'") OR UPPER(t.shortname) LIKE UPPER("'.$name.'"))')
-                        ->whereRaw('UPPER(u.area) LIKE UPPER("'.$area.'")')
-                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("'.$group.'")')
-                        ->whereRaw('UPPER(u.position) LIKE UPPER("'.$position.'")')
-                        ->whereRaw('UPPER(u.city) LIKE UPPER("'.$city.'")')
-                        ->whereRaw('t.status_id LIKE "'.$status_id.'"')
-                        ->whereRaw('t.type LIKE "'.$type.'"') // para ver las pagas
-                        ->whereRaw('t.fee > '.$price) // para ver las pagas mayores a 50000
-                        ->orderBy('t.created_at','desc')
-                        ->get();
-                }
-            } else {
-                if($input['range'] !== null) {
-                    $trainings = DB::table('training_requests AS t')
-                        ->join('users AS u', 'u.id', '=', 't.user_id')
-                        ->join('parameters AS p', 'p.id', '=', 't.status_id')
-                        ->select(
-                            't.*'
-                            , 'u.lastname'
-                            , 'u.area'
-                            , 'u.city'
-                            , 'u.position'
-                            , 'p.name AS status_name'
-                            , DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date')
-                            , DB::raw('null AS users')
-                        )
-                        ->whereRaw("DATE_FORMAT(t.created_at,'%Y-%m-%d') BETWEEN '".$input['range'][0]."' AND '".$input['range'][1]."'")
-                        ->where('t.deleted', 'N')
-                        ->whereRaw('(t.user_id LIKE "'.$user_id.'" OR COALESCE(t.create_user_id, "") LIKE UPPER("'.$create_user_id.'") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "'.$user_id.'"))')
-                        ->whereRaw('(UPPER(u.name) LIKE UPPER("'.$user_name.'") OR UPPER(u.lastname) LIKE UPPER("'.$user_name.'"))')
-                        ->whereRaw('(UPPER(t.name) LIKE UPPER("'.$name.'") OR UPPER(t.shortname) LIKE UPPER("'.$name.'"))')
-                        ->whereRaw('UPPER(u.area) LIKE UPPER("'.$area.'")')
-                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("'.$group.'")')
-                        ->whereRaw('UPPER(u.position) LIKE UPPER("'.$position.'")')
-                        ->whereRaw('UPPER(u.city) LIKE UPPER("'.$city.'")')
-                        ->whereRaw('t.status_id LIKE "'.$status_id.'"')
-                        ->whereRaw('t.type LIKE "'.$type.'"') // para ver las pagas
-                        ->orderBy('t.created_at','desc')
+                        ->whereRaw('(t.user_id LIKE "' . $user_id . '" OR COALESCE(t.create_user_id, "") LIKE UPPER("' . $create_user_id . '") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "' . $user_id . '"))')
+                        ->whereRaw('(UPPER(u.name) LIKE UPPER("' . $user_name . '") OR UPPER(u.lastname) LIKE UPPER("' . $user_name . '"))')
+                        ->whereRaw('(UPPER(t.name) LIKE UPPER("' . $name . '") OR UPPER(t.shortname) LIKE UPPER("' . $name . '"))')
+                        ->whereRaw('UPPER(u.area) LIKE UPPER("' . $area . '")')
+                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("' . $group . '")')
+                        ->whereRaw('UPPER(u.position) LIKE UPPER("' . $position . '")')
+                        ->whereRaw('UPPER(u.city) LIKE UPPER("' . $city . '")')
+                        ->whereRaw('t.status_id LIKE "' . $status_id . '"')
+                        ->whereRaw('t.type LIKE "' . $type . '"') // para ver las pagas
+                        ->whereRaw('t.fee > ' . $price) // para ver las pagas mayores a 50000
+                        ->orderBy('t.created_at', 'desc')
                         ->get();
                 } else {
                     $trainings = DB::table('training_requests AS t')
                         ->join('users AS u', 'u.id', '=', 't.user_id')
                         ->join('parameters AS p', 'p.id', '=', 't.status_id')
                         ->select(
-                            't.*'
-                            , 'u.lastname'
-                            , 'u.area'
-                            , 'u.city'
-                            , 'u.position'
-                            , 'p.name AS status_name'
-                            , DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date')
-                            , DB::raw('null AS users')
+                            't.*',
+                            'u.lastname',
+                            'u.area',
+                            'u.city',
+                            'u.position',
+                            'p.name AS status_name',
+                            DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date'),
+                            DB::raw('null AS users')
                         )
                         ->where('t.deleted', 'N')
-                        ->whereRaw('(t.user_id LIKE "'.$user_id.'" OR COALESCE(t.create_user_id, "") LIKE UPPER("'.$create_user_id.'") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "'.$user_id.'"))')
-                        ->whereRaw('(UPPER(u.name) LIKE UPPER("'.$user_name.'") OR UPPER(u.lastname) LIKE UPPER("'.$user_name.'"))')
-                        ->whereRaw('(UPPER(t.name) LIKE UPPER("'.$name.'") OR UPPER(t.shortname) LIKE UPPER("'.$name.'"))')
-                        ->whereRaw('UPPER(u.area) LIKE UPPER("'.$area.'")')
-                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("'.$group.'")')
-                        ->whereRaw('UPPER(u.position) LIKE UPPER("'.$position.'")')
-                        ->whereRaw('UPPER(u.city) LIKE UPPER("'.$city.'")')
-                        ->whereRaw('t.status_id LIKE "'.$status_id.'"')
-                        ->whereRaw('t.type LIKE "'.$type.'"') // para ver las pagas
-                        ->orderBy('t.created_at','desc')
+                        ->whereRaw('(t.user_id LIKE "' . $user_id . '" OR COALESCE(t.create_user_id, "") LIKE UPPER("' . $create_user_id . '") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "' . $user_id . '"))')
+                        ->whereRaw('(UPPER(u.name) LIKE UPPER("' . $user_name . '") OR UPPER(u.lastname) LIKE UPPER("' . $user_name . '"))')
+                        ->whereRaw('(UPPER(t.name) LIKE UPPER("' . $name . '") OR UPPER(t.shortname) LIKE UPPER("' . $name . '"))')
+                        ->whereRaw('UPPER(u.area) LIKE UPPER("' . $area . '")')
+                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("' . $group . '")')
+                        ->whereRaw('UPPER(u.position) LIKE UPPER("' . $position . '")')
+                        ->whereRaw('UPPER(u.city) LIKE UPPER("' . $city . '")')
+                        ->whereRaw('t.status_id LIKE "' . $status_id . '"')
+                        ->whereRaw('t.type LIKE "' . $type . '"') // para ver las pagas
+                        ->whereRaw('t.fee > ' . $price) // para ver las pagas mayores a 50000
+                        ->orderBy('t.created_at', 'desc')
+                        ->get();
+                }
+            } else {
+                if ($input['range'] !== null) {
+                    $trainings = DB::table('training_requests AS t')
+                        ->join('users AS u', 'u.id', '=', 't.user_id')
+                        ->join('parameters AS p', 'p.id', '=', 't.status_id')
+                        ->select(
+                            't.*',
+                            'u.lastname',
+                            'u.area',
+                            'u.city',
+                            'u.position',
+                            'p.name AS status_name',
+                            DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date'),
+                            DB::raw('null AS users')
+                        )
+                        ->whereRaw("DATE_FORMAT(t.created_at,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                        ->where('t.deleted', 'N')
+                        ->whereRaw('(t.user_id LIKE "' . $user_id . '" OR COALESCE(t.create_user_id, "") LIKE UPPER("' . $create_user_id . '") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "' . $user_id . '"))')
+                        ->whereRaw('(UPPER(u.name) LIKE UPPER("' . $user_name . '") OR UPPER(u.lastname) LIKE UPPER("' . $user_name . '"))')
+                        ->whereRaw('(UPPER(t.name) LIKE UPPER("' . $name . '") OR UPPER(t.shortname) LIKE UPPER("' . $name . '"))')
+                        ->whereRaw('UPPER(u.area) LIKE UPPER("' . $area . '")')
+                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("' . $group . '")')
+                        ->whereRaw('UPPER(u.position) LIKE UPPER("' . $position . '")')
+                        ->whereRaw('UPPER(u.city) LIKE UPPER("' . $city . '")')
+                        ->whereRaw('t.status_id LIKE "' . $status_id . '"')
+                        ->whereRaw('t.type LIKE "' . $type . '"') // para ver las pagas
+                        ->orderBy('t.created_at', 'desc')
+                        ->get();
+                } else {
+                    $trainings = DB::table('training_requests AS t')
+                        ->join('users AS u', 'u.id', '=', 't.user_id')
+                        ->join('parameters AS p', 'p.id', '=', 't.status_id')
+                        ->select(
+                            't.*',
+                            'u.lastname',
+                            'u.area',
+                            'u.city',
+                            'u.position',
+                            'p.name AS status_name',
+                            DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date'),
+                            DB::raw('null AS users')
+                        )
+                        ->where('t.deleted', 'N')
+                        ->whereRaw('(t.user_id LIKE "' . $user_id . '" OR COALESCE(t.create_user_id, "") LIKE UPPER("' . $create_user_id . '") OR t.id IN(select tr.training_request_id from training_request_users as tr where tr.user_id LIKE "' . $user_id . '"))')
+                        ->whereRaw('(UPPER(u.name) LIKE UPPER("' . $user_name . '") OR UPPER(u.lastname) LIKE UPPER("' . $user_name . '"))')
+                        ->whereRaw('(UPPER(t.name) LIKE UPPER("' . $name . '") OR UPPER(t.shortname) LIKE UPPER("' . $name . '"))')
+                        ->whereRaw('UPPER(u.area) LIKE UPPER("' . $area . '")')
+                        ->whereRaw('UPPER(COALESCE(u.group, "")) LIKE UPPER("' . $group . '")')
+                        ->whereRaw('UPPER(u.position) LIKE UPPER("' . $position . '")')
+                        ->whereRaw('UPPER(u.city) LIKE UPPER("' . $city . '")')
+                        ->whereRaw('t.status_id LIKE "' . $status_id . '"')
+                        ->whereRaw('t.type LIKE "' . $type . '"') // para ver las pagas
+                        ->orderBy('t.created_at', 'desc')
                         ->get();
                 }
             }
@@ -306,7 +302,7 @@ class TrainingRequestController extends Controller
             $training_to_approved = 0;
             $budget_spent = 0;
             $in = null;
-            
+
             foreach ($trainings as $item) {
                 // --------------------------------------------------------------------------------------
                 // USUARIOS ASOCIADOS
@@ -316,7 +312,7 @@ class TrainingRequestController extends Controller
                     ->select('u.*')
                     ->where('t.training_request_id', $item->id)
                     ->get();
-                
+
                 $item->users = $users;
 
                 // CONTAR LOS PENDIENTES
@@ -331,8 +327,7 @@ class TrainingRequestController extends Controller
             if ($in != null) $in = substr($in, 0, strlen($in) - 1);
 
             // CONSULTAR EL PRESUPUESTO GASTADO
-            if($input['range'] !== null)
-            {
+            if ($input['range'] !== null) {
                 $results = DB::select("
                     SELECT 
                     SUM(b.value) total
@@ -344,9 +339,7 @@ class TrainingRequestController extends Controller
                     )
                     AND b.anio BETWEEN DATE_FORMAT(?,'%Y') AND DATE_FORMAT(?,'%Y')
                 ", array($in, $input['range'][0], $input['range'][1]));
-            } 
-            else
-            {
+            } else {
                 $results = DB::select("
                     SELECT 
                     SUM(b.value) total
@@ -375,9 +368,9 @@ class TrainingRequestController extends Controller
                 'data' => $data,
                 'message' => 'List Training Requests Successfully'
             ];
-            
+
             return response()->json($response, 200);
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             $response = [
                 'success' => false,
                 'data' => $e->getMessage(),
@@ -393,7 +386,7 @@ class TrainingRequestController extends Controller
 
         $data = DB::table('training_requests AS t')
             ->select('t.*')
-            ->whereRaw('UPPER(t.name) LIKE UPPER("'.$_val.'") OR UPPER(t.shortname) LIKE UPPER("'.$_val.'")')
+            ->whereRaw('UPPER(t.name) LIKE UPPER("' . $_val . '") OR UPPER(t.shortname) LIKE UPPER("' . $_val . '")')
             ->orderBy('shortname', 'desc')
             ->get();
 
@@ -401,7 +394,7 @@ class TrainingRequestController extends Controller
             'count' => $data->count(),
             'entries' => $data,
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -413,6 +406,8 @@ class TrainingRequestController extends Controller
      */
     public function show($id)
     {
+
+        log::info('Entra show');
         // --------------------------------------------------------------------------------------
         // CONSULTA PRINCIPAL
         // --------------------------------------------------------------------------------------
@@ -421,10 +416,10 @@ class TrainingRequestController extends Controller
             ->join('parameters AS p', 'p.id', '=', 't.status_id')
             ->select(
                 't.*',
-                'u.lastname', 
-                'u.area', 
-                'u.city', 
-                'u.position', 
+                'u.lastname',
+                'u.area',
+                'u.city',
+                'u.position',
                 'u.email',
                 'p.name AS status_name',
                 DB::raw('CASE t.type WHEN "G" THEN "Gratis" WHEN "P" THEN "Pago" END AS type_name'),
@@ -448,14 +443,14 @@ class TrainingRequestController extends Controller
             ->select('u.*')
             ->where('t.training_request_id', $data->id)
             ->get();
-        
+
         $data->users = $users;
 
         // --------------------------------------------------------------------------------------
         // FILE
         // --------------------------------------------------------------------------------------
         $lstFile = FileController::privateGetByTableAndId($this->table, $data->id);
-        if($lstFile->count() > 0) $data->file = $lstFile[0];
+        if ($lstFile->count() > 0) $data->file = $lstFile[0];
 
         // --------------------------------------------------------------------------------------
         // HISTORICO CAPACITACIONES EXTERNAS
@@ -469,7 +464,7 @@ class TrainingRequestController extends Controller
                 DB::raw('DATE_FORMAT(t.created_at,"%b %d de %Y") AS date')
             )
             ->where('u.id', $data->user_id)
-            ->orderBy('t.created_at','desc')
+            ->orderBy('t.created_at', 'desc')
             ->get();
 
         $data->lstLastTrainings = $lstLastTrainings;
@@ -489,7 +484,7 @@ class TrainingRequestController extends Controller
                 DB::raw('DATE_FORMAT(l.created_at,"%b %d de %Y a las %h:%m %p") AS date')
             )
             ->where('l.training_request_id', $data->id)
-            ->orderBy('l.created_at','asc')
+            ->orderBy('l.created_at', 'asc')
             ->get();
 
         $data->lstTrainingRequestsLogs = $lstTrainingRequestsLogs;
@@ -508,15 +503,15 @@ class TrainingRequestController extends Controller
                 DB::raw('null AS file'),
             )
             ->where('c.training_request_id', $data->id)
-            ->orderBy('c.created_at','desc')
+            ->orderBy('c.created_at', 'desc')
             ->get();
 
         // --------------------------------------------------------------------------------------
         // FILE
         // --------------------------------------------------------------------------------------
-        foreach($lstTrainingRequestsComments as $item) {
+        foreach ($lstTrainingRequestsComments as $item) {
             $lstFile = FileController::privateGetByTableAndId('training_requests_comments', $item->id);
-            if($lstFile->count() > 0) $item->file = $lstFile[0];
+            if ($lstFile->count() > 0) $item->file = $lstFile[0];
         }
 
         $data->lstTrainingRequestsComments = $lstTrainingRequestsComments;
@@ -545,7 +540,7 @@ class TrainingRequestController extends Controller
             'data' => $data,
             'message' => 'List Training Requests Successfully'
         ];
-        
+
         return response()->json($response, 200);
     }
 
@@ -560,28 +555,30 @@ class TrainingRequestController extends Controller
         try {
 
             $data = $request->all();
-            $input = json_decode($data['data'], true); // CONVERTIR A JSON LOS DATOS DEL FORMULARIO
+
+            $input = json_decode($data['data'], true);
+
+            // CONVERTIR A JSON LOS DATOS DEL FORMULARIO
             $file = $request->file('file'); // OBTENER EL DOCUMENTO
+
+            $createorUser = User::find($input['user_id']);
 
             $users = null;
 
             // VALIDAR SI ES GRUPAL O INDIVIDUAL
             $group = $input['group'];
 
-            if($group === 'S')
-            {
-                if($input['users'] == null)
-                {
+            if ($group === 'S') {
+                if ($input['users'] == null) {
                     $response = [
                         'success' => false,
                         'data' => null,
                         'message' => 'No ha seleccionado ningun usuario'
                     ];
                     return response()->json($response, 404);
-                }
-                else $users = $input['users'];
+                } else $users = $input['users'];
             }
-            
+
             $rules = [
                 // 'code' => 'required',
                 // 'name' => 'required',
@@ -651,13 +648,12 @@ class TrainingRequestController extends Controller
             $trainingRequest->create_user_id = $this->user->id; // USUARIO QUE CREA LA CAPACITACIÓN
             $trainingRequest->deleted = 'N';
             if (isset($input['specialty_id'])) $trainingRequest->specialty_id = $input['specialty_id'];
-            
+
             // GUARDAR
             $trainingRequest->save();
 
             // GUARDAR LA SOLICITUD GRUPAL
-            if($users != null)
-            {
+            if ($users != null) {
                 // BORRAR LA RELACIÓN
                 TrainingRequestUser::where('training_request_id', $trainingRequest->id)->delete();
 
@@ -673,7 +669,7 @@ class TrainingRequestController extends Controller
                     $data = $this->getUserDataMail($user['id'], 1);
 
                     // Para el template
-                    
+
                     $mailData["subject"] = $data->subject;
                     $mailData["mail"] = $data->email;
                     $mailData["fecha_actual"] = $data->fecha_actual;
@@ -683,17 +679,16 @@ class TrainingRequestController extends Controller
                     $mailData["training_requests_end_date"] = $trainingRequest->end_date;
                     $mailData["training_requests_value"] = $trainingRequest->fee == null ? 0 : $trainingRequest->fee;
                     $mailData["training_requests_methodology"] =
-                        $trainingRequest->methodology == 'P' ? 'Presencial': 'Virtual';
-                    $mailData["url_training"] = config('app.url').'/config/trainingrequests/';
+                        $trainingRequest->methodology == 'P' ? 'Presencial' : 'Virtual';
+                    $mailData["url_training"] = config('app.url') . '/config/trainingrequests/';
 
                     // Enviar el correo
 
                     $this->sendEmail($data->template, $mailData);
-                   
                 }
             } else {
                 // Datos para el template del reporte
-                
+
                 $data = $this->getUserDataMail($input['user_id'], 1);
 
                 // Para el template
@@ -706,12 +701,11 @@ class TrainingRequestController extends Controller
                 $mailData["training_requests_end_date"] = $trainingRequest->end_date;
                 $mailData["training_requests_value"] = $trainingRequest->fee == null ? 0 : $trainingRequest->fee;
                 $mailData["training_requests_methodology"] =
-                    $trainingRequest->methodology == 'P' ? 'Presencial': 'Virtual';
-                $mailData["url_training"] = config('app.url').'/config/trainingrequests/';
+                    $trainingRequest->methodology == 'P' ? 'Presencial' : 'Virtual';
+                $mailData["url_training"] = config('app.url') . '/config/trainingrequests/';
 
                 // Enviar el correo
                 $this->sendEmail($data->template, $mailData);
-
             }
 
             // LOG
@@ -722,14 +716,17 @@ class TrainingRequestController extends Controller
             $trainingRequestsLog->save();
 
             // GUARDAR EL ARCHIVO
-            if($file){
+            if ($file) {
                 $table = $this->table;
                 $table_id = $trainingRequest->id;
                 $data = null;
-               
+
                 // GUARDAR EL DOCUMENTO
                 FileController::privateStore($file, $table, $table_id, $data);
             }
+
+            $this->notificationSendingRules($createorUser, $trainingRequest);
+
 
             DB::commit();
 
@@ -740,8 +737,7 @@ class TrainingRequestController extends Controller
             ];
 
             return response()->json($response, 200);
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollback();
             $response = [
                 'success' => false,
@@ -754,11 +750,89 @@ class TrainingRequestController extends Controller
 
 
     /**
+     * Se declaran las reglas de envío de notificaciones 
+     */
+    private function notificationSendingRules(User $user, TrainingRequest $training)
+    {
+
+        $authorizedUsers = $this->getAuthorization();
+
+        Log::info($authorizedUsers);
+
+        $authorizedUsersGod = $authorizedUsers->filter(function ($user) {
+            return $user->rol_id == 3;
+        });
+
+        // Capacitación gratuita / pago (filtra ciudad (Mexico) / area / Rol 5)
+        if ($user->city === 'Mexico') {
+            $users = $authorizedUsers
+                ->when($user->city, function ($query) use ($user) {
+                    return $query->where('city', $user->city);
+                })
+                ->when($user->area, function ($query) use ($user) {
+                    return $query->where('area', $user->area);
+                })
+                ->where('rol_id', 5);
+        } else {
+            // Capacitación gratuita (filtra ciudad (Foraneo) / area / Rol 4)
+            $users = $authorizedUsers
+                ->when($user->city, function ($query) use ($user) {
+                    return $query->where('city', $user->city);
+                })
+                ->when($user->area, function ($query) use ($user) {
+                    return $query->where('area', $user->area);
+                })
+                ->where('rol_id', 4);
+        }
+
+        $users = $users->concat($authorizedUsersGod);
+
+        Log::info($users);
+
+        // Creamos el correo de envio: 
+
+        $month = config('constants.meses');
+        $now = date('d') . ' de ' . $month[date('m')] . ' de ' . date('Y');
+
+        foreach ($users as $user) {
+
+            $mailData["subject"] = "CAPACITACION EXTERNA - REVISIÓN";
+            $mailData["mail"] = $user->email;
+            $mailData["fecha_actual"] = $now;
+            $mailData["user_name"] = $user->user_name;
+            $mailData["training_requests_name"] = $training->shortname;
+            $mailData["training_requests_start_date"] = $training->start_date;
+            $mailData["training_requests_end_date"] = $training->end_date;
+            $mailData["training_requests_value"] = $training->fee == null ? 0 : $training->fee;
+            $mailData["training_requests_methodology"] =         $training->methodology == 'P' ? 'Presencial' : 'Virtual';
+            $mailData["url_training"] = config('app.url') . '/config/trainingrequests/';
+
+            // Enviar el correo
+            $this->sendEmail("emails.trainingrequest", $mailData);
+        }
+    }
+
+    /**
+     * Encontrar todos los usuarios involucrados en los mensajes de 
+     * Capacitaciones
+     */
+
+    private function getAuthorization()
+    {
+        $roles = [3, 4, 5, 8, 6, 7];
+        $users = User::whereIn('rol_id', $roles)->get();
+
+        return $users;
+    }
+
+
+    /**
      * Esta funcion envía el email 
      */
-    private function sendEmail($template, $mailData) {
+    private function sendEmail($template, $mailData)
+    {
         try {
-            Mail::send($template, $mailData, function($message) use ($mailData) {
+            Mail::send($template, $mailData, function ($message) use ($mailData) {
                 $message->to($mailData['mail'])->subject($mailData['subject']);
             });
         } catch (\Exception $e) {
@@ -786,18 +860,15 @@ class TrainingRequestController extends Controller
             // VALIDAR SI ES GRUPAL O INDIVIDUAL
             $group = $input['group'];
 
-            if($group === 'S')
-            {
-                if(count($input['users']) == 0)
-                {
+            if ($group === 'S') {
+                if (count($input['users']) == 0) {
                     $response = [
                         'success' => false,
                         'data' => null,
                         'message' => 'No ha seleccionado ningun usuario'
                     ];
                     return response()->json($response, 404);
-                }
-                else $users = $input['users'];
+                } else $users = $input['users'];
             }
 
             $trainingRequest = TrainingRequest::find($id);
@@ -865,11 +936,10 @@ class TrainingRequestController extends Controller
             $trainingRequest->save();
 
             // GUARDAR LA SOLICITUD GRUPAL
-            if($users != null)
-            {
+            if ($users != null) {
                 // BORRAR LA RELACIÓN
                 TrainingRequestUser::where('training_request_id', $id)->delete();
-                
+
                 // CREAR LA RELACIÓN
                 foreach ($users as $user) {
                     $trainingRequestUser = new TrainingRequestUser;
@@ -877,7 +947,6 @@ class TrainingRequestController extends Controller
                     $trainingRequestUser->training_request_id = $trainingRequest->id;
                     $trainingRequestUser->save();
                 }
-
             }
 
             // LOG
@@ -888,12 +957,12 @@ class TrainingRequestController extends Controller
             $trainingRequestsLog->save();
 
             // GUARDAR EL ARCHIVO
-            if($file){
+            if ($file) {
 
                 // BUSCAR Y ELIMINAR EL DOCUMENTO ANTERIOR
                 $lstFiles = FileController::privateGetByTableAndId($this->table, $trainingRequest->id);
-                if($lstFiles->count() > 0) {
-                    foreach($lstFiles as $item) {
+                if ($lstFiles->count() > 0) {
+                    foreach ($lstFiles as $item) {
                         $item->delete();
                         Fil::delete($item->path);
                     }
@@ -902,7 +971,7 @@ class TrainingRequestController extends Controller
                 $table = $this->table;
                 $table_id = $trainingRequest->id;
                 $data = null;
-               
+
                 // GUARDAR EL DOCUMENTO
                 FileController::privateStore($file, $table, $table_id, $data);
             }
@@ -916,7 +985,7 @@ class TrainingRequestController extends Controller
             ];
 
             return response()->json($response, 200);
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollback();
             $response = [
                 'success' => false,
@@ -958,8 +1027,8 @@ class TrainingRequestController extends Controller
             $statusId = $input['status_id'];
 
             $tr = TrainingRequestsLog::where('training_request_id', $id)->where('before_status_id', $statusId)->get();
-            
-            if($tr->count() > 0) {
+
+            if ($tr->count() > 0) {
                 $response = [
                     'success' => false,
                     'data' => null,
@@ -992,8 +1061,7 @@ class TrainingRequestController extends Controller
             // SE SOLICITA ESTE AJUSTE EN LA TAREA => https://tintobox.atlassian.net/browse/GTMX-180
             // 2: Autorizada para pago
             // 4: Autorizada
-            if($statusId == 2 || $statusId == 4)
-            {
+            if ($statusId == 2 || $statusId == 4) {
                 $course = new Course;
                 $course->code = $trainingRequest->code;
                 $course->name = $trainingRequest->name;
@@ -1010,16 +1078,16 @@ class TrainingRequestController extends Controller
 
                 // CÓDIGO
                 // DTX-anio-id
-                $code = 'DTX-' .date("Y") . '-' . $course->id;
+                $code = 'DTX-' . date("Y") . '-' . $course->id;
 
                 $course->code = $code;
                 $course->save();
 
                 // ASOCAIR LOS USUARIOS AL CURSO
-                
+
                 // Tomar los usuarios asociados a la capacitación
                 $users = TrainingRequestUser::where('training_request_id', $id)->get();
-                
+
                 // CREAR LA RELACIÓN
                 foreach ($users as $user) {
                     $userCourse = new UserCourse;
@@ -1064,10 +1132,9 @@ class TrainingRequestController extends Controller
                 'data' => $trainingRequest,
                 'message' => 'Actualización de estado realizada con éxito.'
             ];
-    
-            return response()->json($response, 200);
 
-        } catch(\Exception $e){
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
             DB::rollback();
             $response = [
                 'success' => false,
@@ -1076,7 +1143,6 @@ class TrainingRequestController extends Controller
             ];
             return response()->json($response, 400);
         }
-
     }
 
     private function statusNotifyMail($trainingRequest, $oldStatus, $newStatus)
@@ -1086,22 +1152,25 @@ class TrainingRequestController extends Controller
         $userOwner = User::find($trainingRequest->user_id);
 
         // Notificación a los usuarios relacinados con la capacitación
-        if($trainingRequest->group == 'S') { // Grupal
+        if ($trainingRequest->group == 'S') { // Grupal
 
             // Tomar los usuarios asociados a la capacitación
-            $users = TrainingRequestUser::where('training_request_id', $id)->get();
-                
+            $users = TrainingRequestUser::where('training_request_id', $trainingRequest->id)->get();
+
             // LLENAR LOS ID DE USAURIOS
             foreach ($users as $user) {
                 $usersId[] = $user->user_id;
             }
-
         } else {
             $usersId[] = $trainingRequest->user_id;
             // CREADOR DE LA CAPACITACIÓN
-            if($trainingRequest->user_id != $trainingRequest->create_user_id)
+            if ($trainingRequest->user_id != $trainingRequest->create_user_id)
                 $usersId[] = $trainingRequest->create_user_id;
         }
+
+        // Encontramos todos los usuarios que solicitan la capacitación: 
+
+        $userStedents =  User::whereIn('id', $usersId)->get();
 
         // 1: Administrador
         // 2: Usuario general
@@ -1114,204 +1183,277 @@ class TrainingRequestController extends Controller
         // 9: Secretaria
         // 10: Gerente
 
+        $authorizedUsers = $this->getAuthorization();
+
+        $authorizedDirector = $authorizedUsers
+            ->where('rol_id', 7);
+
+        $authorizedCapacitaciones = $authorizedUsers
+            ->where('rol_id', 3);
+
+        $authorizedSocioCapacitaciones = $authorizedUsers
+            ->where('rol_id', 6);
+
+        $authorizedFinanzas = $authorizedUsers
+            ->where('rol_id', 8);
+
+
+
         // CONSULTAR EL USAURIO POR ROL Y CIUDAD
         switch ($newStatus->id) {
             case 1: // 1: Por autorizar
                 if (str_contains($userOwner->city, $this->cityMx)) {
                     // En el caso de personas de Mexico y
                     // si la capacitación es menor a 50,000.00
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee < $this->fee_limit) {
-                        // notificación al socio del área y capacitaciones
-                        // 5: Socio
-                        $inRoles[] = 5;
-                        // 6: Socio de capacitaciones
-                        $inRoles[] = 6;
-                    } elseif($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->fee_limit) { // La capacitación es igual o mayor a 50,000.00
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee < $this->feeLimit) {
+
+                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                                in_array($authorizedUser->rol_id, [5]);
+                        });
+
+                        $users = $users->concat($authorizedCapacitaciones);
+                        $users = $users->concat($authorizedSocioCapacitaciones);
+                    } elseif ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
                         // notificación al Socio del área, Socio Director, Socio de capacitaciones y Capacitaciones
                         // 5: Socio
-                        $inRoles[] = 5;
-                        // 6: Socio de capacitaciones
-                        $inRoles[] = 6;
-                        // 7: Socio Director
-                        $inRoles[] = 7;
-                        // 3: Capacitaciones
-                        $inRoles[] = 3;
+                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                                in_array($authorizedUser->rol_id, [5]);
+                        });
+
+                        $users = $users->concat($authorizedCapacitaciones);
+                        $users = $users->concat($authorizedSocioCapacitaciones);
+                        $users = $users->concat($authorizedDirector);
                     }
                 } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
                     // Si la capacitación es menor a 50,000.00
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee < $this->fee_limit) {
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee < $this->feeLimit) {
                         // notificación al encargado de la oficina y capacitaciones
                         // 4: Encargado de oficina
-                        $inRoles[] = 4;
-                        // 6: Socio de capacitaciones
-                        $inRoles[] = 6;
-                    } elseif($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->fee_limit) { // La capacitación es igual o mayor a 50,000.00
+                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                                in_array($authorizedUser->rol_id, [4]);
+                        });
+
+                        $users = $users->concat($authorizedCapacitaciones);
+                        $users = $users->concat($authorizedSocioCapacitaciones);
+                    } elseif ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
                         // notificación al Socio Director, Encargado de la oficina, Socio de capacitaciones y Capacitaciones
                         // 7: Socio Director
-                        $inRoles[] = 7;
-                        // 4: Encargado de oficina
-                        $inRoles[] = 4;
-                        // 6: Socio de capacitaciones
-                        $inRoles[] = 6;
-                        // 3: Capacitaciones
-                        $inRoles[] = 3;
+
+                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                                in_array($authorizedUser->rol_id, [4]);
+                        });
+
+                        $users = $users->concat($authorizedCapacitaciones);
+                        $users = $users->concat($authorizedSocioCapacitaciones);
+                        $users = $users->concat($authorizedDirector);
                     }
                 }
-                
+
                 break;
             case 2: // 2: Autorizada para pago
-                if(str_contains($userOwner->city, $this->cityMx)) {
+                if (str_contains($userOwner->city, $this->cityMx)) {
                     // Notificar Socio de la división
                     // 5: Socio
-                    $inRoles[] = 5;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [5]);
+                    });
                 } else {
                     // Notificar encargado de oficina
                     // 4: Encargado de oficina
-                    $inRoles[] = 4;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [4]);
+                    });
                 }
 
                 // Notificar Rol de finanzas
                 // Notificar Rol Socio de capacitaciones
                 // Notificar Rol Capacitaciones
-                 // 6: Socio de capacitaciones
-                 $inRoles[] = 6;
-                 // 3: Capacitaciones
-                 $inRoles[] = 3;
-                 // 8: Finanzas
-                $inRoles[] = 8;
+                // 6: Socio de capacitaciones
+                $users = $users->concat($authorizedCapacitaciones);
+                $users = $users->concat($authorizedSocioCapacitaciones);
+                $users = $users->concat($authorizedFinanzas);
+                // 8: Finanzas
                 break;
             case 3: // 3: Pagada
                 if (str_contains($userOwner->city, $this->cityMx)) {
                     // En el caso de personas de Mexico y
                     // si la capacitación es menor a 50,000.00
-                    if($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->fee_limit) { // La capacitación es igual o mayor a 50,000.00
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
                         // notificación al Socio del área, Socio Director, Socio de capacitaciones y Capacitaciones
                         // 5: Socio
-                        $inRoles[] = 5;
-                        // 6: Socio de capacitaciones
-                        $inRoles[] = 6;
-                        // 7: Socio Director
-                        $inRoles[] = 7;
-                        // 3: Capacitaciones
-                        $inRoles[] = 3;
+                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                                in_array($authorizedUser->rol_id, [5]);
+                        });
                     }
 
                     // Notificar Socio de la división => 5
 
                 } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
                     // Si la capacitación es menor a 50,000.00
-                    if($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->fee_limit) { // La capacitación es igual o mayor a 50,000.00
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
                         // notificación al Socio Director, Encargado de la oficina, Socio de capacitaciones y Capacitaciones
                         // 7: Socio Director
-                        $inRoles[] = 7;
-                        // 4: Encargado de oficina
-                        $inRoles[] = 4;
-                        // 6: Socio de capacitaciones
-                        $inRoles[] = 6;
-                        // 3: Capacitaciones
-                        $inRoles[] = 3;
+                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                                in_array($authorizedUser->rol_id, [4]);
+                        });
                     }
-                    // Notificar encargado de oficina
-                    // 4: Encargado de oficina
-                    $inRoles[] = 4;
                 }
 
                 // Notificar Rol de finanzas
                 // Notificar Rol Socio de capacitaciones
                 // Notificar Rol Capacitaciones
                 // 6: Socio de capacitaciones
-                $inRoles[] = 6;
-                // 3: Capacitaciones
-                $inRoles[] = 3;
-                // 8: Finanzas
-                $inRoles[] = 8;
+                $users = $users->concat($authorizedCapacitaciones);
+                $users = $users->concat($authorizedSocioCapacitaciones);
+                $users = $users->concat($authorizedFinanzas);
+                $users = $users->concat($authorizedDirector);
                 break;
-            case 4: // 4: Autorizada
+            case 4: // 4: Autorizada                                
+                $users = $authorizedCapacitaciones;
+                break;
             case 5: // 5: Preautorizada
+
+                $users = $authorizedCapacitaciones;
+                $users = $users->concat($authorizedSocioCapacitaciones);
+                if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) {
+                    $users = $users->concat($authorizedDirector);
+                }
+                break;
+
             case 7: // 7: Autorizada sin pago
+                $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                    return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                        ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                        in_array($authorizedUser->rol_id, [3]);
+                });
+                break;
             case 8: // 8: Rechazada
-                if(str_contains($userOwner->city, $this->cityMx)) {
+                if (str_contains($userOwner->city, $this->cityMx)) {
                     // Notificar Socio de la división
                     // 5: Socio
-                    $inRoles[] = 5;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [5]);
+                    });
                 } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
                     // Notificar encargado de oficina
                     // 4: Encargado de oficina
-                    $inRoles[] = 4;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [4]);
+                    });
                 }
 
                 // Notificar Rol Socio de capacitaciones
                 // Notificar Rol Capacitaciones
-                // 6: Socio de capacitaciones
-                $inRoles[] = 6;
-                // 3: Capacitaciones
-                $inRoles[] = 3;
+                $users = $users->concat($authorizedCapacitaciones);
+                $users = $users->concat($authorizedSocioCapacitaciones);
                 break;
             case 9: // 9: En curso
-                if(str_contains($userOwner->city, $this->cityMx)) {
+                if (str_contains($userOwner->city, $this->cityMx)) {
                     // Notificar Socio de la división
                     // 5: Socio
-                    $inRoles[] = 5;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [5]);
+                    });
                 } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
                     // Notificar encargado de oficina
                     // 4: Encargado de oficina
-                    $inRoles[] = 4;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [4]);
+                    });
                 }
 
                 // Notificar Rol Capacitaciones
                 // 3: Capacitaciones
-                $inRoles[] = 3;
+                $users = $users->concat($authorizedCapacitaciones);
                 break;
             case 10: // 10: Completada para revisión
             case 11: // 11: Completada
-                if(str_contains($userOwner->city, $this->cityMx)) {
+                if (str_contains($userOwner->city, $this->cityMx)) {
                     // Notificar Socio de la división
                     // 5: Socio
-                    $inRoles[] = 5;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [5]);
+                    });
                 } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
                     // Notificar encargado de oficina
                     // 4: Encargado de oficina
-                    $inRoles[] = 4;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [4]);
+                    });
                 }
 
-                if($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->fee_limit) { // La capacitación es igual o mayor a 50,000.00
+                if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
                     // notificación al Socio Director
                     // 7: Socio Director
-                    $inRoles[] = 7;
+                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
+                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
+                            in_array($authorizedUser->rol_id, [7]);
+                    });
                 }
 
                 // Notificar Rol Socio de capacitaciones
                 // Notificar Rol Capacitaciones
-                // 6: Socio de capacitaciones
-                $inRoles[] = 6;
-                // 3: Capacitaciones
-                $inRoles[] = 3;
+                // 6: Socio de capacitaciones                
+                $users = $users->concat($authorizedCapacitaciones);
+                $users = $users->concat($authorizedSocioCapacitaciones);
                 break;
         }
 
-        $usersRole = $this->getUserByRoleAndCity($inRoles, $userOwner->city);
-        foreach ($usersRole as $item) {
-            $usersId[] = $item->id;
-        }
+
+        $users = $users->concat($userStedents);
+        $users = $users->concat($userOwner);
+        $month = config('constants.meses');
+
+        $now = date('d') . ' de ' . $month[date('m')] . ' de ' . date('Y');
 
         // RECORRER TODA LA LISTA DE USUARIOS Y ENVIAR EL EMAIL
-        foreach ($usersId as $id) {
+        foreach ($users as $user) {
             // ENVIO DE CORREO
-            $data = $this->getUserDataMail($id, 2);
+            Log::info("usuarios");
+            Log::info($user);
 
             // Para el template
-            $mailData["subject"] = $data->subject;
-            $mailData["mail"] = $data->email;
-            $mailData["fecha_actual"] = $data->fecha_actual;
-            $mailData["user_name"] = $this->user->name;
+            $mailData["subject"] = "ACTUALIZACIÓN DE ESTADOS";
+            $mailData["mail"] = $user["email"];
+            $mailData["fecha_actual"] = $now;
+            $mailData["user_name"] = $user["name"];
             $mailData["training_requests_name"] = $trainingRequest->shortname;
             $mailData["old_status"] = $oldStatus->name;
             $mailData["new_status"] = $newStatus->name;
-            $mailData["url_training"] = 'http://localhost:8080/config/trainingrequests/';
+            $mailData["url_training"] = config('app.url') . '/config/trainingrequests/';
 
             // Enviar el correo
-            Mail::send($data->template, $mailData, function($message)use($mailData) {
-                $message->to($mailData['mail'] )->subject($mailData['subject']);
+            Mail::send("emails.trainingrequeststatus", $mailData, function ($message) use ($mailData) {
+                $message->to($mailData['mail'])->subject($mailData['subject']);
             });
         }
     }
@@ -1335,17 +1477,17 @@ class TrainingRequestController extends Controller
 
         $resp = $results[0];
 
-        if($type == 1) {
+        if ($type == 1) {
             $resp->subject = "REGISTRO DE CAPACITACIÓN EXTERNA";
             $resp->template = "emails.trainingrequest";
-        } elseif($type == 2) {
+        } elseif ($type == 2) {
             $resp->subject = "ACTUALIZACIÓN DE ESTADOS";
             $resp->template = "emails.trainingrequeststatus";
         } else {
             $resp->subject = "";
             $resp->template = "emails.trainingrequeststatus";
         }
-        
+
 
         return $resp;
     }
@@ -1358,5 +1500,4 @@ class TrainingRequestController extends Controller
             ->where('u.city', $city)
             ->get();
     }
-
 }
