@@ -538,59 +538,58 @@
                 </v-btn>
               </v-col>
             </v-row>
-
             <v-row
-              v-for="(usr, i) in item.users"
-              :key="i"
+              v-if="item.group == 'S'"
               align="center"
             >
               <v-col
-                cols="5"
+                cols="12"
               >
                 <v-text-field
-                  v-model="usr.lastname"
-                  class="mb-n3"
-                  label="Nombre y Apellido"
-                  type="text"
-                  :disabled="true"
+                  v-model="searchUsr"
+                  append-icon="mdi-magnify"
+                  class="ml-auto"
+                  hide-details
+                  label="Buscar usuario"
+                  single-line
                 />
-              </v-col>
-              <v-col
-                cols="3"
-              >
-                <v-text-field
-                  v-model="usr.area"
-                  class="mb-n3"
-                  label="Área"
-                  type="text"
-                  :disabled="true"
-                />
-              </v-col>
-              <v-col
-                cols="3"
-              >
-                <v-text-field
-                  v-model="usr.position"
-                  class="mb-n3"
-                  label="Cargo"
-                  type="text"
-                  :disabled="true"
-                />
-              </v-col>
-              <v-col
-                cols="1"
-              >
-                <v-btn
-                  class="mb-n3 float-right"
-                  min-width="0"
-                  icon
-                  color="error"
-                  @click="removeUser(i)"
+
+                <v-divider class="mt-3" />
+
+                <v-data-table
+                  :headers="headersUsers"
+                  :items="item.users"
+                  :search.sync="searchUsr"
+                  multi-sort
+                  must-sort
+                  :footer-props="{
+                    showFirstLastPage: true,
+                    'itemsPerPageText':'Usuarios por página'
+                  }"
                 >
-                  <v-icon>mdi-minus-circle</v-icon>
-                </v-btn>
+                  <template slot="no-data">
+                    No hay datos para mostrar
+                  </template>
+                  <template slot="no-results">
+                    No hay resultados para mostrar
+                  </template>
+                  <template v-slot:[`item.actions`]="data">
+                    <div>
+                      <v-btn
+                        class="float-center"
+                        min-width="0"
+                        icon
+                        color="error"
+                        @click="removeUser(data.item)"
+                      >
+                        <v-icon>mdi-minus-circle</v-icon>
+                      </v-btn>
+                    </div>
+                  </template>
+                </v-data-table>
               </v-col>
             </v-row>
+
             <!-- FIN SOLICITUD GRUPAL -->
 
             <v-row align="center">
@@ -944,6 +943,23 @@
           align: 'center',
         },
       ],
+      headersUsers: [
+        {
+          text: 'Usuario',
+          value: 'lastname',
+        },
+        {
+          text: 'Área',
+          value: 'area',
+        },
+        {
+          sortable: false,
+          text: 'Eliminar',
+          value: 'actions',
+          width: '10%',
+          align: 'center',
+        },
+      ],
       filter: {
         range: null,
         user_id: null,
@@ -1008,6 +1024,7 @@
       parameterService: null,
       userService: null,
       search: undefined,
+      searchUsr: undefined,
       overlay: false,
       displayDialog: false,
       disabled: false,
@@ -1162,10 +1179,19 @@
           this.item.email = this.userInfo.email;
           this.item.city = this.userInfo.city;
         }
-
         this.item.status_id = 1;
         this.item.group = group === 'S' ? group : 'N';
-        this.item.users = group === 'S' ? [] : null;
+        if (group === 'S') {
+          this.item = {
+            ...this.item, // Esto mantiene las propiedades existentes de `item`
+            users: [], // Esto inicializa `users` como un arreglo vacío
+          };
+        } else {
+          this.item = {
+            ...this.item, // Esto mantiene las propiedades existentes de `item`
+            users: null, // Esto asigna `users` a null si `group` no es 'S'
+          };
+        }
         this.displayDialog = true;
         this.overlay = false;
         this.isEdit = false;
@@ -1182,8 +1208,6 @@
         this.confirm = true;
       },
       store () {
-        console.log('USERS:::::', this.item.users);
-
         // VALIDAR QUE SE AGREGE LOS USUARIOS
         if (this.item.group === 'S' && this.item.users.length === 0) {
           this.snackbar = {
@@ -1197,8 +1221,6 @@
 
         if (!this.isEdit) this.saveData();
         else this.updateData();
-
-        console.log('ITEM:::::', this.item);
       },
       saveData () {
         // GUARDAR SOLICTUD
@@ -1303,11 +1325,22 @@
       },
       addUser () {
         if (this.userSelected != null) {
-          this.item.users.push(this.userSelected);
+          const found = this.item.users.find(usr => usr.id === this.userSelected.id);
+          if (found === undefined) this.item.users.push(this.userSelected);
+          else {
+            this.snackbar = {
+              display: true,
+              title: 'ERROR: ',
+              type: 'error',
+              message: 'El usuario ya se ecnuentra asignado',
+            };
+          }
           this.userSelected = {};
         }
       },
-      removeUser (index) {
+      removeUser (item) {
+        const index = this.item.users.findIndex((element) => element.id === item.id);
+        console.log('removeUser:::::::', index);
         this.item.users.splice(index, 1);
       },
       formatPrice (value) {
