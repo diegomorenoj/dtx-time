@@ -12,24 +12,6 @@
         class="ml-auto mr-auto"
       >
         <v-btn
-          class="float-right"
-          min-width="0"
-          icon
-          :disabled="userInfo.id != item.user_id"
-          @click="displayDialog = true"
-        >
-          <v-icon>mdi-pencil-box-outline</v-icon>
-        </v-btn>
-        <v-btn
-          class="float-right"
-          min-width="0"
-          icon
-          :disabled="userInfo.id != item.user_id"
-          @click="openConfirm(3, null)"
-        >
-          <v-icon>mdi-trash-can-outline</v-icon>
-        </v-btn>
-        <v-btn
           class="ml-2 float-right"
           min-width="0"
           icon
@@ -44,7 +26,6 @@
           class="float-right"
           item-text="name"
           item-value="id"
-          :disabled="!userInfo.permits.CHANGE_STATUS_TRAINING"
           @change="openConfirm(1, null)"
         />
       </v-col>
@@ -1237,8 +1218,8 @@
       loadParameters () {
         this.overlay = true;
         this.parameterService.getStatus(this.id).then(response => {
-          console.log('Parameters:::', response);
           this.lstStatus = response.data;
+          console.log(this.lstStatus);
           this.overlay = false;
         }).catch((error) => {
           console.log(error);
@@ -1300,11 +1281,10 @@
       changeStatus () {
         // UPDATE
         this.overlay = true;
+        this.confirm = false;
         const id = this.item.id;
         this.trainingRequestService.changeStatus(id, this.item.status_id).then(response => {
-          console.log('Response:::', response);
           this.overlay = false;
-          this.confirm = false;
           this.loadData();
           this.snackbar = {
             display: true,
@@ -1315,7 +1295,6 @@
         }).catch((error) => {
           console.log('Service error leo :::', error.response.data);
           this.overlay = false;
-          this.confirm = false;
           this.snackbar = {
             display: true,
             title: 'ERROR: ',
@@ -1327,9 +1306,9 @@
       deleteTrainingRequest () {
         // DELETE
         this.overlay = true;
+        this.confirm = false;
         this.trainingRequestService.delete(this.item.id).then(response => {
           this.overlay = false;
-          this.confirm = false;
           this.item = {};
           this.snackbar = {
             display: true,
