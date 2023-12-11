@@ -6,6 +6,7 @@ use JWTAuth;
 use App\Models\User;
 use App\Models\Parameter;
 use App\Models\TrainingRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -256,7 +257,7 @@ class ParameterController extends Controller
         $city_name = strtoupper($user->city);
 
         // VALIDAR LOS ESTADOS PREDECESORES A EN CURSO
-        // 3: Pagada
+        // 3: Pagadausers courses
         // 4: Autorizada
         // 7: Autorizada sin pago
         $pre_en_curso = DB::table('training_requests_logs')
@@ -274,6 +275,8 @@ class ParameterController extends Controller
             ->whereIn('after_status_id', [3, 4, 7, 9])
             ->get();
 
+
+
         // VALIDAR LOS ESTADOS PREDECESORES A COMPLETADA
         // 3: Pagada
         // 4: Autorizada
@@ -289,74 +292,89 @@ class ParameterController extends Controller
 
         switch ($this->user->rol_id) {
             case 1: // 1	Administrador
-                $states[] = 1;
-                if ($trainingRequest->type == $this->payment) $states[] = 2;
-                $states[] = 3;
-                if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
-                $states[] = 5;
-                // SOLO SI ES MAYOR AL LIMITE
-                if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6;
-                if ($trainingRequest->type == $this->payment) $states[] = 7; // SOLO PAGAS
-                $states[] = 8;
-                if ($pre_en_curso->count() > 0) $states[] = 9;
-                if ($pre_completada_revision->count() > 0) $states[] = 10;
-                if ($pre_completada->count() > 0) $states[] = 11;
+                if($trainingRequest->status_id!=11) {
+                    $states[] = 1;
+                    if ($trainingRequest->type == $this->payment) $states[] = 2;
+                    $states[] = 3;
+                    if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
+                    $states[] = 5;
+                    // SOLO SI ES MAYOR AL LIMITE
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6;
+                    if ($trainingRequest->type == $this->payment) $states[] = 7; // SOLO PAGAS
+                    $states[] = 8;
+                    if ($pre_en_curso->count() > 0) $states[] = 9;
+                    if ($pre_completada_revision->count() > 0) $states[] = 10;
+                    if ($pre_completada->count() > 0) $states[] = 11;
+                }
                 break;
 
             case 2: // 2	Usuario general
-                if ($pre_en_curso->count() > 0) $states[] = 9;
-                if ($pre_completada_revision->count() > 0) $states[] = 10;
+                if($trainingRequest->status_id!=11) {
+                    if ($pre_en_curso->count() > 0) $states[] = 9;
+                    if ($pre_completada_revision->count() > 0) $states[] = 10;
+                }
                 break;
 
             case 3: // 3	Capacitaciones
-                $states[] = 1;
-                // SOLO PAGAS MENORES O IGUALES AL LIMITE
-                if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2;
-                if ($pre_en_curso->count() > 0) $states[] = 9;
-                if ($pre_completada->count() > 0) $states[] = 11;
+
+                if($trainingRequest->status_id!=11) {
+                    // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2;
+                    if ($pre_en_curso->count() > 0) $states[] = 9;
+                    if ($pre_completada->count() > 0) $states[] = 11;      
+                    $states[] = 1;              
+                }               
+
                 break;
 
             case 4: // 4	Encargado de oficina
-                $states[] = 5;
-                $states[] = 8;
-                break;
-
-            case 5: // 5	Socio
-                $states[] = 0;
-                // CURSOS DE LA CIUDAD DE MEXICO
-                if (str_contains($city_name, $this->city_mx)) {
+                if($trainingRequest->status_id!=11) {
                     $states[] = 5;
                     $states[] = 8;
                 }
                 break;
 
+            case 5: // 5	Socio
+                if($trainingRequest->status_id!=11) {
+                    $states[] = 0;
+                    // CURSOS DE LA CIUDAD DE MEXICO
+                    if (str_contains($city_name, $this->city_mx)) {
+                        $states[] = 5;
+                        $states[] = 8;
+                    }
+                }
+                break;
+
             case 6: // 6	Socio de capacitaciones
 
-                $states[] = 8;
-                // CURSOS DE LA CIUDAD DE MEXICO
-                if (str_contains($city_name, $this->city_mx)) {
-                    if ($trainingRequest->type == $this->free || ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 4; // SOLO SI ES GRATIS
-                } else {
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2; // SOLO PAGAS MENORES O IGUALES AL LIMITE
-                    if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6; // SOLO SI ES MAYOR AL LIMITE
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 7; // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                if($trainingRequest->status_id!=11) {
+                    $states[] = 8;
+                    // CURSOS DE LA CIUDAD DE MEXICO
+                    if (str_contains($city_name, $this->city_mx)) {
+                        if ($trainingRequest->type == $this->free || ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 4; // SOLO SI ES GRATIS
+                    } else {
+                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2; // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                        if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
+                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6; // SOLO SI ES MAYOR AL LIMITE
+                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 7; // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                    }
                 }
                 break;
 
             case 7: // 7	Socio Director
                 // CURSOS DE LA CIUDAD DE MEXICO
-                if (str_contains($city_name, $this->city_mx)) {
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) {
-                        $states[] = 4;
+                if($trainingRequest->status_id!=11) {
+                    if (str_contains($city_name, $this->city_mx)) {
+                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) {
+                            $states[] = 4;
+                            $states[] = 8;
+                        }
+                    } else {
+                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 2;
+                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 7; // SOLO PAGAS MAYOR AL LIMITE
                         $states[] = 8;
                     }
-                } else {
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 2;
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 7; // SOLO PAGAS MAYOR AL LIMITE
-                    $states[] = 8;
                 }
-
                 break;
 
             case 8: // 8	Finanzas
@@ -367,10 +385,13 @@ class ParameterController extends Controller
         // ESTADO DE LA CAPACITACIÓN EXTERNA
         $states[] = $trainingRequest->status_id;
 
+        Log::info($states); 
+
         $data = DB::table('parameters')
             ->whereIn('id', $states)
             ->orderBy('id', 'asc')
             ->get();
+
 
         $response = [
             'success' => true,

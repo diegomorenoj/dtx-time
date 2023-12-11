@@ -3,10 +3,12 @@
   <head>
     <title>{{ $subject }}</title>
   </head>
-  <body>
+  <body style="background-color:#d8d8d8; padding: 40px;">
+  <div style="max-width: 600px; margin: 10px auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
     <p><strong>&nbsp;</strong></p>
-    <p style="text-align: center;"><strong>ACTUALIZACI&Oacute;N DE ESTADOS</strong></p>
-    <p><strong>&nbsp;</strong></p>
+    <p style="text-align: center; color: #4f2d7f; text-align: center;">
+    <img src="https://dtx.grantthornton.mx/pluginfile.php/1/theme_learnr/logo/0x200/1690927393/logo_login.png" /><br/><br/>    
+    <strong>ACTUALIZACI&Oacute;N DE ESTADOS</strong></p>
     <p><strong>&nbsp;</strong></p>
     <p style="text-align: justify;">
       El usuario <strong>{{ $user_name }}</strong>
@@ -15,7 +17,7 @@
       <strong>{{ $old_status }}</strong> a <strong>{{ $new_status }}</strong>
     </p>
     <p><strong>&nbsp;</strong></p>
-    <p><strong>&nbsp;</strong></p>
+    <p style="text-align:center;"><strong>&nbsp;</strong>
     <a target="_blank" href="{{ $url_training }}">
       <button style="
           padding: 12px;
@@ -24,22 +26,18 @@
           border: #4f2d7f;
           border-radius: 6px;
           font-size: 15px;
-          cursor: pointer;"
+          cursor: pointer; "
         >
         VER CAPACITACIÓN
       </button>
     </a>
-    <p>&nbsp;</p>
-    
+    </p>
     <p>&nbsp;</p>
     <p>Cordialmente,</p>
     <p>&nbsp;</p>
-    <p>&nbsp;</p>
-    <p>&nbsp;</p>
-    <p>&nbsp;</p>
-    <p><strong>_______________________</strong></p>
-    <p><strong>Equipo de Capacitaciones</strong></p>
-    <p>Salles Sainz, Grant Thornton</p>
-    <p><u>capacitacion@mx.gt.com</u></p>
+    <p><strong>Equipo de Capacitaciones</strong><br/>
+    Salles Sainz, Grant Thornton<br/>
+    capacitacion@mx.gt.com</p>
+  </div>
   </body>
 </html>

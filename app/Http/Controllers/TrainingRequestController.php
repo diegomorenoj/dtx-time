@@ -17,6 +17,7 @@ use App\Models\TrainingRequestsLog;
 use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\File as Fil;
 use Illuminate\Support\Facades\Log;
+use PhpParser\Node\Stmt\TryCatch;
 
 class TrainingRequestController extends Controller
 {
@@ -150,8 +151,24 @@ class TrainingRequestController extends Controller
             $type = '%%';
             $create_user_id = '%%';
 
+            /**
+             * 
+             * 1	Administrador
+            * 2	Usuario general
+            * 3	Capacitaciones
+            * 4	Encargado de oficina
+            * 5	Socio
+            * 6	Socio de capacitaciones
+            * 7	Socio Director
+            * 8	Finanzas
+            * 9	Secretaria
+            * 10	Gerente
+
+             * 
+             */
+
             // VALIDAR EL USUARIO
-            if ($this->user->rol_id === 2 || $this->user->rol_id === 5) {
+            if ($this->user->rol_id === 2 ) {
                 $user_id = $this->user->id; // SOLO LO DE CADA UNO
                 $create_user_id = $this->user->id;
             } else { // AL 1: ADMIN Y AL ROL 3: CAPACITACIONES SE LE CARGAN TODAS
@@ -163,7 +180,7 @@ class TrainingRequestController extends Controller
             }
 
             // VALIDAR LA CIUDAD
-            if ($this->user->rol_id == 4) // PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
+            if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 10 ) // PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
             {
                 $city = $this->user->city;
             } else $city = $input['city'] === null ? '%%' : $input['city'];
@@ -579,6 +596,8 @@ class TrainingRequestController extends Controller
                 } else $users = $input['users'];
             }
 
+
+
             $rules = [
                 // 'code' => 'required',
                 // 'name' => 'required',
@@ -630,11 +649,11 @@ class TrainingRequestController extends Controller
             $trainingRequest = new TrainingRequest;
             $trainingRequest->type = $input['type'];
             $trainingRequest->status_id = $input['status_id'];
-            if (isset($input['code'])) $trainingRequest->code = $input['code'];
-            if (isset($input['name'])) $trainingRequest->name = $input['name'];
+            
+            $trainingRequest->name = $input['shortname'];
             $trainingRequest->shortname = $input['shortname'];
             $trainingRequest->institute = $input['institute'];
-            if (isset($input['category'])) $trainingRequest->category = $input['category'];
+            $trainingRequest->category = "Capacitación Externa - ".$input['type'];
             $trainingRequest->hours = $input['hours'];
             $trainingRequest->start_date = $input['start_date'];
             $trainingRequest->end_date = $input['end_date'];
@@ -651,6 +670,13 @@ class TrainingRequestController extends Controller
 
             // GUARDAR
             $trainingRequest->save();
+            
+            // Luego de guardar generamos el code y guardamos
+            $firstLetterOfType = strtoupper(substr($trainingRequest->type, 0, 1));
+            $code = "CE" . $firstLetterOfType ."-". $trainingRequest->id;
+            $trainingRequest->code = $code;
+            $trainingRequest->save();
+
 
             // GUARDAR LA SOLICITUD GRUPAL
             if ($users != null) {
@@ -725,6 +751,8 @@ class TrainingRequestController extends Controller
                 FileController::privateStore($file, $table, $table_id, $data);
             }
 
+
+
             $this->notificationSendingRules($createorUser, $trainingRequest);
 
 
@@ -739,6 +767,7 @@ class TrainingRequestController extends Controller
             return response()->json($response, 200);
         } catch (\Exception $e) {
             DB::rollback();
+            Log::info($e->getMessage());
             $response = [
                 'success' => false,
                 'data' => $e->getMessage(),
@@ -786,6 +815,7 @@ class TrainingRequestController extends Controller
         }
 
         $users = $users->concat($authorizedUsersGod);
+        $users = $users->concat(collect([$user]));
 
         Log::info($users);
 
@@ -1018,10 +1048,12 @@ class TrainingRequestController extends Controller
         return response()->json($response, 200);
     }
 
+
     public function changeStatus(Request $request, $id)
     {
         try {
             $input = $request->all();
+
 
             $trainingRequest = TrainingRequest::find($id);
             $statusId = $input['status_id'];
@@ -1051,17 +1083,25 @@ class TrainingRequestController extends Controller
             $trainingRequest->status_id = $input['status_id'];
             $trainingRequest->save();
 
+
             // LOG
             $trainingRequestsLog->user_id = $this->user->id;
             $trainingRequestsLog->after_status_id = $input['status_id'];
             $trainingRequestsLog->comments = "Se cambia el estado";
             $trainingRequestsLog->save();
 
+
             // CUANDO SE PONE EN ESTADO APROBADA SE DEBE CREAR EL CURSO EN ESTADO EN CURSO => // 5: Aprobada
             // SE SOLICITA ESTE AJUSTE EN LA TAREA => https://tintobox.atlassian.net/browse/GTMX-180
             // 2: Autorizada para pago
             // 4: Autorizada
+
+            Log::info("Estado");
+            Log::info($statusId);
+
             if ($statusId == 2 || $statusId == 4) {
+
+
                 $course = new Course;
                 $course->code = $trainingRequest->code;
                 $course->name = $trainingRequest->name;
@@ -1069,10 +1109,11 @@ class TrainingRequestController extends Controller
                 $course->category = $trainingRequest->category;
                 $course->hours = $trainingRequest->hours;
                 $course->start_date = $trainingRequest->start_date;
+                $course->required = "S";
                 $course->end_date = $trainingRequest->end_date;
                 $course->provider_id = 4; // 4: Capacitación externa
                 $course->training_request_id = $trainingRequest->id;
-                $course->category = 'Ninguna';
+                $course->category = 'Capacitación Exterma';
                 $course->status_id = 12; // 12: En curso
                 $course->save();
 
@@ -1115,6 +1156,31 @@ class TrainingRequestController extends Controller
                 $userCourse->objective_id = null;
                 // GUARDAR
                 $userCourse->save();
+            } else if ($statusId == 11) {
+
+                Log::info("entro 11");
+
+                $course = Course::where('training_request_id', $trainingRequest->id)->first();
+                Log::info($course);
+                if ($course) {
+                    // 2. Cambiar el estado del curso
+                    $course->status_id =13; 
+                    $course->save();
+
+                    // 3. Encontrar y actualizar los UserCourse
+                    $userCourses = UserCourse::where('course_id', $course->id)->get();
+                    Log::info($userCourses);
+
+                    foreach ($userCourses as $userCourse) {
+                        // Aquí actualizas las propiedades que necesitas
+                        $userCourse->hours = $course->hours; 
+                        $userCourse->qualification = '10'; 
+                        $userCourse->progress ='100'; 
+
+                        // Guardar los cambios
+                        $userCourse->save();
+                    }
+                }
             }
 
             DB::commit();
@@ -1136,325 +1202,140 @@ class TrainingRequestController extends Controller
             return response()->json($response, 200);
         } catch (\Exception $e) {
             DB::rollback();
+            Log::alert($e->getMessage());
             $response = [
                 'success' => false,
                 'data' => 'Exception Error.',
-                'message' => 'Lo sentimos, hubo un error, por favor intente nuevamente: ' . $e->getMessage()
+                'message' => 'Lo sentimos, hubo un error, por favor intente nuevamente: '
             ];
             return response()->json($response, 400);
         }
     }
 
-    private function statusNotifyMail($trainingRequest, $oldStatus, $newStatus)
+    private function getUserNotify($userOwner, $finanzas, $scapacitaciones, $director)
     {
-        $usersId = array();
-        $inRoles = array();
-        $userOwner = User::find($trainingRequest->user_id);
-
-        // Notificación a los usuarios relacinados con la capacitación
-        if ($trainingRequest->group == 'S') { // Grupal
-
-            // Tomar los usuarios asociados a la capacitación
-            $users = TrainingRequestUser::where('training_request_id', $trainingRequest->id)->get();
-
-            // LLENAR LOS ID DE USAURIOS
-            foreach ($users as $user) {
-                $usersId[] = $user->user_id;
-            }
-        } else {
-            $usersId[] = $trainingRequest->user_id;
-            // CREADOR DE LA CAPACITACIÓN
-            if ($trainingRequest->user_id != $trainingRequest->create_user_id)
-                $usersId[] = $trainingRequest->create_user_id;
-        }
-
-        // Encontramos todos los usuarios que solicitan la capacitación: 
-
-        $userStedents =  User::whereIn('id', $usersId)->get();
-
-        // 1: Administrador
-        // 2: Usuario general
-        // 3: Capacitaciones
-        // 4: Encargado de oficina
-        // 5: Socio
-        // 6: Socio de capacitaciones
-        // 7: Socio Director
-        // 8: Finanzas
-        // 9: Secretaria
-        // 10: Gerente
-
+        // Obtener usuarios autorizados
         $authorizedUsers = $this->getAuthorization();
 
-        $authorizedDirector = $authorizedUsers
-            ->where('rol_id', 7);
+        // Inicializar la colección de usuarios notificados
+        $notifiedUsers = collect();
 
-        $authorizedCapacitaciones = $authorizedUsers
-            ->where('rol_id', 3);
+        // Determinar el rol basado en la ciudad del usuario propietario
+        $officeRoleId = str_contains($userOwner->city, $this->cityMx) ? 5 : 4;
 
-        $authorizedSocioCapacitaciones = $authorizedUsers
-            ->where('rol_id', 6);
+        // Filtrar por director de oficina si es necesario
+        $notifiedUsers = $notifiedUsers->concat($authorizedUsers->filter(function ($authorizedUser) use ($userOwner, $officeRoleId) {
+            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
+                ($userOwner->area ? $authorizedUser->area == $userOwner->area : true) &&
+                in_array($authorizedUser->rol_id, [$officeRoleId]);
+        }));
 
-        $authorizedFinanzas = $authorizedUsers
-            ->where('rol_id', 8);
+        // Filtrar por Capacitaciones si es necesario
+        $notifiedUsers = $notifiedUsers->concat($authorizedUsers->where('rol_id', 3));
 
-
-
-        // CONSULTAR EL USAURIO POR ROL Y CIUDAD
-        switch ($newStatus->id) {
-            case 1: // 1: Por autorizar
-                if (str_contains($userOwner->city, $this->cityMx)) {
-                    // En el caso de personas de Mexico y
-                    // si la capacitación es menor a 50,000.00
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee < $this->feeLimit) {
-
-                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                                in_array($authorizedUser->rol_id, [5]);
-                        });
-
-                        $users = $users->concat($authorizedCapacitaciones);
-                        $users = $users->concat($authorizedSocioCapacitaciones);
-                    } elseif ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
-                        // notificación al Socio del área, Socio Director, Socio de capacitaciones y Capacitaciones
-                        // 5: Socio
-                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                                in_array($authorizedUser->rol_id, [5]);
-                        });
-
-                        $users = $users->concat($authorizedCapacitaciones);
-                        $users = $users->concat($authorizedSocioCapacitaciones);
-                        $users = $users->concat($authorizedDirector);
-                    }
-                } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
-                    // Si la capacitación es menor a 50,000.00
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee < $this->feeLimit) {
-                        // notificación al encargado de la oficina y capacitaciones
-                        // 4: Encargado de oficina
-                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                                in_array($authorizedUser->rol_id, [4]);
-                        });
-
-                        $users = $users->concat($authorizedCapacitaciones);
-                        $users = $users->concat($authorizedSocioCapacitaciones);
-                    } elseif ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
-                        // notificación al Socio Director, Encargado de la oficina, Socio de capacitaciones y Capacitaciones
-                        // 7: Socio Director
-
-                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                                in_array($authorizedUser->rol_id, [4]);
-                        });
-
-                        $users = $users->concat($authorizedCapacitaciones);
-                        $users = $users->concat($authorizedSocioCapacitaciones);
-                        $users = $users->concat($authorizedDirector);
-                    }
-                }
-
-                break;
-            case 2: // 2: Autorizada para pago
-                if (str_contains($userOwner->city, $this->cityMx)) {
-                    // Notificar Socio de la división
-                    // 5: Socio
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [5]);
-                    });
-                } else {
-                    // Notificar encargado de oficina
-                    // 4: Encargado de oficina
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [4]);
-                    });
-                }
-
-                // Notificar Rol de finanzas
-                // Notificar Rol Socio de capacitaciones
-                // Notificar Rol Capacitaciones
-                // 6: Socio de capacitaciones
-                $users = $users->concat($authorizedCapacitaciones);
-                $users = $users->concat($authorizedSocioCapacitaciones);
-                $users = $users->concat($authorizedFinanzas);
-                // 8: Finanzas
-                break;
-            case 3: // 3: Pagada
-                if (str_contains($userOwner->city, $this->cityMx)) {
-                    // En el caso de personas de Mexico y
-                    // si la capacitación es menor a 50,000.00
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
-                        // notificación al Socio del área, Socio Director, Socio de capacitaciones y Capacitaciones
-                        // 5: Socio
-                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                                in_array($authorizedUser->rol_id, [5]);
-                        });
-                    }
-
-                    // Notificar Socio de la división => 5
-
-                } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
-                    // Si la capacitación es menor a 50,000.00
-                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
-                        // notificación al Socio Director, Encargado de la oficina, Socio de capacitaciones y Capacitaciones
-                        // 7: Socio Director
-                        $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                            return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                                ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                                in_array($authorizedUser->rol_id, [4]);
-                        });
-                    }
-                }
-
-                // Notificar Rol de finanzas
-                // Notificar Rol Socio de capacitaciones
-                // Notificar Rol Capacitaciones
-                // 6: Socio de capacitaciones
-                $users = $users->concat($authorizedCapacitaciones);
-                $users = $users->concat($authorizedSocioCapacitaciones);
-                $users = $users->concat($authorizedFinanzas);
-                $users = $users->concat($authorizedDirector);
-                break;
-            case 4: // 4: Autorizada                                
-                $users = $authorizedCapacitaciones;
-                break;
-            case 5: // 5: Preautorizada
-
-                $users = $authorizedCapacitaciones;
-                $users = $users->concat($authorizedSocioCapacitaciones);
-                if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) {
-                    $users = $users->concat($authorizedDirector);
-                }
-                break;
-
-            case 7: // 7: Autorizada sin pago
-                $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                    return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                        ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                        in_array($authorizedUser->rol_id, [3]);
-                });
-                break;
-            case 8: // 8: Rechazada
-                if (str_contains($userOwner->city, $this->cityMx)) {
-                    // Notificar Socio de la división
-                    // 5: Socio
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [5]);
-                    });
-                } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
-                    // Notificar encargado de oficina
-                    // 4: Encargado de oficina
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [4]);
-                    });
-                }
-
-                // Notificar Rol Socio de capacitaciones
-                // Notificar Rol Capacitaciones
-                $users = $users->concat($authorizedCapacitaciones);
-                $users = $users->concat($authorizedSocioCapacitaciones);
-                break;
-            case 9: // 9: En curso
-                if (str_contains($userOwner->city, $this->cityMx)) {
-                    // Notificar Socio de la división
-                    // 5: Socio
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [5]);
-                    });
-                } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
-                    // Notificar encargado de oficina
-                    // 4: Encargado de oficina
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [4]);
-                    });
-                }
-
-                // Notificar Rol Capacitaciones
-                // 3: Capacitaciones
-                $users = $users->concat($authorizedCapacitaciones);
-                break;
-            case 10: // 10: Completada para revisión
-            case 11: // 11: Completada
-                if (str_contains($userOwner->city, $this->cityMx)) {
-                    // Notificar Socio de la división
-                    // 5: Socio
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [5]);
-                    });
-                } else { // En el caso de personas de oficinas diferentes a Mexico (foráneos)
-                    // Notificar encargado de oficina
-                    // 4: Encargado de oficina
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [4]);
-                    });
-                }
-
-                if ($trainingRequest->type == $this->payment && $trainingRequest->fee >= $this->feeLimit) { // La capacitación es igual o mayor a 50,000.00
-                    // notificación al Socio Director
-                    // 7: Socio Director
-                    $users = $authorizedUsers->filter(function ($authorizedUser) use ($userOwner) {
-                        return ($userOwner->city ? $authorizedUser->city == $userOwner->city : true) &&
-                            ($userOwner->area ? $authorizedUser->area == $$userOwner->area : true) &&
-                            in_array($authorizedUser->rol_id, [7]);
-                    });
-                }
-
-                // Notificar Rol Socio de capacitaciones
-                // Notificar Rol Capacitaciones
-                // 6: Socio de capacitaciones                
-                $users = $users->concat($authorizedCapacitaciones);
-                $users = $users->concat($authorizedSocioCapacitaciones);
-                break;
+        // Filtrar por Finanzas para autorizar pago
+        if ($finanzas) {
+            $notifiedUsers = $notifiedUsers->concat($authorizedUsers->where('rol_id', 8));
         }
 
+        // Filtrar por Socio de Capacitaciones si es necesario
+        if ($scapacitaciones) {
+            $notifiedUsers = $notifiedUsers->concat($authorizedUsers->where('rol_id', 6));
+        }
 
-        $users = $users->concat($userStedents);
-        $users = $users->concat($userOwner);
-        $month = config('constants.meses');
+        // Filtrar por Socio Director si es necesario
+        if ($director) {
+            $notifiedUsers = $notifiedUsers->concat($authorizedUsers->where('rol_id', 7));
+        }
 
-        $now = date('d') . ' de ' . $month[date('m')] . ' de ' . date('Y');
+        // Eliminar duplicados y devolver la colección de usuarios notificados
+        return $notifiedUsers->unique('id');
+    }
 
-        // RECORRER TODA LA LISTA DE USUARIOS Y ENVIAR EL EMAIL
-        foreach ($users as $user) {
-            // ENVIO DE CORREO
-            Log::info("usuarios");
-            Log::info($user);
 
-            // Para el template
-            $mailData["subject"] = "ACTUALIZACIÓN DE ESTADOS";
-            $mailData["mail"] = $user["email"];
-            $mailData["fecha_actual"] = $now;
-            $mailData["user_name"] = $user["name"];
-            $mailData["training_requests_name"] = $trainingRequest->shortname;
-            $mailData["old_status"] = $oldStatus->name;
-            $mailData["new_status"] = $newStatus->name;
-            $mailData["url_training"] = config('app.url') . '/config/trainingrequests/';
+    private function statusNotifyMail($trainingRequest, $oldStatus, $newStatus)
+    {
+        try {
 
-            // Enviar el correo
-            Mail::send("emails.trainingrequeststatus", $mailData, function ($message) use ($mailData) {
-                $message->to($mailData['mail'])->subject($mailData['subject']);
+            $usersId = array();
+            $inRoles = array();
+            $users = collect();
+            $userOwner = User::find($trainingRequest->user_id);
+            Log::info($userOwner);
+            $users = $users->concat(collect([$userOwner]));
+            Log::info($users);
+            // Si la capacitación es grupal encontramos todos los estudiantes y para enviar las notificaciones
+            if ($trainingRequest->group == 'S') { // Grupal
+
+                // Tomar los usuarios asociados a la capacitación
+                $usersTraining = TrainingRequestUser::where('training_request_id', $trainingRequest->id)->get();
+
+                // LLENAR LOS ID DE USAURIOS
+                foreach ($usersTraining as $user) {
+                    $usersId[] = $user->user_id;
+                }
+
+                $userStudents =  User::whereIn('id', $usersId)->get();
+                $users = $users->concat($userStudents);
+            }
+
+            // Determinar el rol basado en la ciudad del usuario propietario
+            $fee = floatval($trainingRequest->fee);
+            $trueDirector = $fee >= $this->feeLimit ? true : false;
+
+            switch ($newStatus->id) {
+                case 2:
+                case 3:
+
+                    $usersAutorization = $this->getUserNotify($userOwner, true, true, $trueDirector);
+                    break;
+                case 5:
+                case 7:
+                case 8:
+                    $usersAutorization = $this->getUserNotify($userOwner, false, true, $trueDirector);
+                    break;
+                case 6:
+                    $usersAutorization = $this->getUserNotify($userOwner, false, true, true);
+                    break;
+                default:
+                    $usersAutorization = $this->getUserNotify($userOwner, false, false, false);
+                    break;
+            }
+
+
+            $users = $users->concat($usersAutorization);
+
+            $month = config('constants.meses');
+            $now = date('d') . ' de ' . $month[date('m')] . ' de ' . date('Y');
+
+            // RECORRER TODA LA LISTA DE USUARIOS Y ENVIAR EL EMAIL
+            $users->each(function ($u) use ($trainingRequest, $oldStatus, $newStatus, $now) {
+
+                // Preparar los datos para el template del email
+                $mailData = [
+                    "subject" => "ACTUALIZACIÓN DE ESTADOS",
+                    "mail" => $u->email,
+                    "fecha_actual" => $now,
+                    "user_name" => $u->name,
+                    "training_requests_name" => $trainingRequest->shortname,
+                    "old_status" => $oldStatus->name,
+                    "new_status" => $newStatus->name,
+                    "url_training" => config('app.url') . '/config/trainingrequests/'
+                ];
+
+                // Enviar el correo
+                Mail::send("emails.trainingrequeststatus", $mailData, function ($message) use ($mailData) {
+                    $message->to($mailData['mail'])->subject($mailData['subject']);
+                });
             });
+        } catch (\Exception $e) {
+            Log::alert($e->getMessage());
+            $response = [
+                'success' => false,
+                'data' => 'Exception Error.',
+                'message' => 'Lo sentimos, hubo un error al enviar los correos, por favor intente nuevamente'
+            ];
+            return response()->json($response, 400);
         }
     }
 
