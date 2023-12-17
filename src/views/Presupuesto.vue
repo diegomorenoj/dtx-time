@@ -1,14 +1,13 @@
 <template>
   <v-container
     id="providers-view"
-    fluid
     tag="section"
   >
     <v-row align="center">
       <v-col
-        cols="6"
+        cols="3"
       >
-        <p class="mb-0 d-inline-block text-h4">
+        <p class="mb-0 text-h4">
           Gestion de presupuesto
           <span
             v-if="userInfo.rol_id == 4 || userInfo.rol_id == 5"
@@ -17,9 +16,22 @@
         </p>
       </v-col>
       <v-col
-        cols="6"
+        cols="3"
       >
-        <div class="pb-2 text-right">
+        <v-select
+          v-model="filter.anio"
+          :items="isMain"
+          label="Seleccionar presupuesto"
+          item-text="anio"
+          item-value="anio"
+          clearable
+          @change="changeAnio(); getMainBudget();"
+        />
+      </v-col>
+      <v-col
+        cols="2"
+      >
+        <div class="pb-6 text-right">
           <v-btn
             v-if="userInfo.permits.CREATE_BUDGETS"
             small
@@ -35,18 +47,104 @@
           </v-btn>
         </div>
       </v-col>
+      <v-col cols="2">
+        <div class="pb-6 text-right">
+          <v-btn
+            v-if="userInfo.permits.CREATE_BUDGETS"
+            small
+            color="info"
+            min-width="100"
+            class="mr-2"
+            @click="openDistributeBudget()"
+          >
+            <v-icon left>
+              mdi-plus
+            </v-icon>
+            Distribuir
+          </v-btn>
+        </div>
+      </v-col>
+      <v-col cols="2">
+        <div class="pb-6 text-right">
+          <v-btn
+            v-if="userInfo.permits.CREATE_BUDGETS"
+            small
+            color="primary"
+            min-width="100"
+            class="mr-2"
+            @click="addData()"
+          >
+            <v-icon left>
+              mdi-microsoft-excel
+            </v-icon>
+            Exportar
+          </v-btn>
+        </div>
+      </v-col>
     </v-row>
-    <v-divider class="mb-6 secondary" />
     <div class="mb-3 mt-3">
       &nbsp;
     </div>
     <material-card
       icon="mdi-cash"
       icon-small
-      color="orange"
-      title="Listado de presupuestos"
+      color="error"
+      :title="`Resumen ${mesInicial + ' ' + filter.anio}  /  ${mesFinal} ${filter.anio + 1} `"
+      class="mb-6"
     >
       <v-card-text>
+        <template>
+          <div>
+            <table
+              cellspacing="10px"
+              style="width:800px; margin:0px auto; font-size:12pt; text-align: center; "
+            >
+              <thead
+                class="v-data-table-header"
+                style="font-weight: bold;"
+              >
+                <tr>
+                  <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px;">
+                    Año
+                  </th>
+                  <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
+                    Valor
+                  </th>
+                  <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
+                    Gastado
+                  </th>
+                  <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
+                    Presupuesto Ejecutado
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="selectedItem">
+                  <td>{{ selectedItem.anio }}</td>
+                  <td>{{ formatPrice(selectedItem.value) }}</td>
+                  <td>{{ formatPrice(selectedItem.spent) }}</td>
+                  <td>{{ formatPrice(selectedItem.executed_budget) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </v-card-text>
+    </material-card>
+
+    <div class="mb-3 mt-3">
+      &nbsp;
+    </div>
+    <material-card
+      icon="mdi-division"
+      icon-small
+      color="orange"
+      title="Distribución"
+    >
+      <v-card-text>
+        <div v-if="totalFilteredValue !== null">
+          <strong>Total Filtrado:</strong> {{ formatPrice(totalFilteredValue) }}
+        </div>
         <v-text-field
           v-model="search"
           append-icon="mdi-magnify"
@@ -54,14 +152,13 @@
           hide-details
           label="Buscar registros"
           single-line
-          style="max-width: 250px;"
+          style="width: 250px;"
         />
-
         <v-divider class="mt-3" />
 
         <v-data-table
           :headers="headers"
-          :items="items"
+          :items="computedItems"
           :search.sync="search"
           multi-sort
           must-sort
@@ -79,8 +176,8 @@
           <template v-slot:[`item.value`]="data">
             {{ formatPrice(data.item.value) }}
           </template>
-          <template v-slot:[`item.used_budget`]="data">
-            {{ formatPrice(data.item.used_budget) }}
+          <template v-slot:[`item.spent`]="data">
+            {{ formatPrice(data.item.spent) }}
           </template>
           <template v-slot:[`item.executed_budget`]="data">
             {{ formatPrice(data.item.executed_budget) }}
@@ -162,7 +259,7 @@
     <v-dialog
       v-model="displayDialog"
       persistent
-      max-width="500"
+      width="500"
     >
       <material-card
         full-header
@@ -199,8 +296,12 @@
                   label="Valor"
                   type="number"
                   placeholder="Ingrese el valor"
+                  @blur="actualizarFechaCompuesta"
                 />
               </v-col>
+            </v-row>
+            <v-row style="text-align:center">
+              <v-col> {{ periodData }} </v-col>
             </v-row>
           </v-form>
           <div class="pa-3 text-center mt-2">
@@ -225,11 +326,12 @@
         </v-card-text>
       </material-card>
     </v-dialog>
-    <!-- DISTRIBUCIÓN DE PRESUPUESTO -->
+
+    <!-- DIALOGO DE CONFIRMACIÓN -->
     <v-dialog
-      v-model="displayBudget"
+      v-model="budgetDistribution"
       persistent
-      max-width="950"
+      width="500"
     >
       <material-card
         full-header
@@ -241,7 +343,8 @@
         <template #heading>
           <div class="text-center pa-5">
             <div class="text-h4 white--text">
-              Distribución de presupuesto
+              Distribución <br>
+              {{ mesInicial + ' ' + filter.anio }}  /  {{ mesFinal }} {{ filter.anio + 1 }}
             </div>
           </div>
         </template>
@@ -249,45 +352,10 @@
           <v-form>
             <v-row align="center">
               <v-col
-                cols="4"
-              >
-                <v-text-field
-                  v-model="item.anio"
-                  label="Año"
-                  type="number"
-                  :disabled="true"
-                />
-              </v-col>
-              <v-col
-                cols="4"
-              >
-                <v-text-field
-                  :value="formatPrice(item.value)"
-                  label="Total"
-                  type="text"
-                  :disabled="true"
-                />
-              </v-col>
-              <v-col
-                cols="4"
-              >
-                <v-text-field
-                  :value="formatPrice(item.available_budget)"
-                  label="Disponible"
-                  type="text"
-                  :disabled="true"
-                />
-              </v-col>
-            </v-row>
-            <v-row
-              v-if="userInfo.permits.DISTRIBUTE_BUDGETS"
-              align="center"
-            >
-              <v-col
-                cols="4"
+                cols="6"
               >
                 <v-autocomplete
-                  v-model="budget.city"
+                  v-model="item.city"
                   :items="lstCities"
                   :loading="isLoadingCities"
                   :search-input.sync="searchCities"
@@ -298,16 +366,17 @@
                   item-text="city"
                   item-value="city"
                   label="Buscar ciudad"
-                  placeholder="Empieza a escribir para buscar"
+                  placeholder="Empieza a escribir para Buscar"
                   prepend-icon="mdi-database-search"
-                  :disabled="!userInfo.permits.DISTRIBUTE_BUDGETS"
+                  :disabled="!userInfo.permits.SEARCH_CITIES_TRAINING"
+                  @input="loadData()"
                 />
               </v-col>
               <v-col
-                cols="4"
+                cols="6"
               >
                 <v-autocomplete
-                  v-model="budget.area"
+                  v-model="item.area"
                   :items="lstAreas"
                   :loading="isLoadingAreas"
                   :search-input.sync="searchAreas"
@@ -317,85 +386,21 @@
                   item-text="area"
                   item-value="area"
                   label="Buscar área"
-                  placeholder="Empieza a escribir para buscar"
+                  placeholder="Empieza a escribir para Buscar"
                   prepend-icon="mdi-database-search"
-                  :disabled="budget.city == null ? true : false"
+                  :disabled="!userInfo.permits.SEARCH_AREAS_TRAINING"
+                  @input="loadData()"
                 />
               </v-col>
               <v-col
-                cols="3"
+                cols="12"
               >
                 <v-text-field
-                  v-model="budget.value"
+                  v-model="item.value"
                   label="Valor"
                   type="number"
                   placeholder="Ingrese el valor"
-                  :disabled="!userInfo.permits.DISTRIBUTE_BUDGETS"
                 />
-              </v-col>
-              <v-col
-                cols="1"
-              >
-                <v-btn
-                  class="float-right"
-                  min-width="0"
-                  icon
-                  color="success"
-                  :disabled="!userInfo.permits.DISTRIBUTE_BUDGETS"
-                  @click="addBudget()"
-                >
-                  <v-icon>mdi-plus-circle</v-icon>
-                </v-btn>
-              </v-col>
-            </v-row>
-            <v-row
-              v-for="(bg, i) in item.budgets"
-              :key="i"
-              align="center"
-            >
-              <v-col
-                cols="4"
-              >
-                <v-text-field
-                  v-model="bg.city"
-                  label="Ciudad"
-                  type="text"
-                  :disabled="true"
-                />
-              </v-col>
-              <v-col
-                cols="4"
-              >
-                <v-text-field
-                  v-model="bg.area"
-                  label="Área"
-                  type="text"
-                  :disabled="true"
-                />
-              </v-col>
-              <v-col
-                cols="3"
-              >
-                <v-text-field
-                  :value="formatPrice(bg.value)"
-                  label="Valor"
-                  type="text"
-                  :disabled="true"
-                />
-              </v-col>
-              <v-col
-                cols="1"
-              >
-                <v-btn
-                  v-if="userInfo.permits.DISTRIBUTE_BUDGETS"
-                  class="float-right"
-                  min-width="0"
-                  icon
-                  color="error"
-                  @click="removeBudget(i)"
-                >
-                  <v-icon>mdi-minus-circle</v-icon>
-                </v-btn>
               </v-col>
             </v-row>
           </v-form>
@@ -404,17 +409,16 @@
               small
               color="error"
               min-width="100"
-              @click="closeDialog()"
+              @click="budgetDistribution = false"
             >
               Cancelar
             </v-btn>
             <v-btn
-              v-if="userInfo.permits.DISTRIBUTE_BUDGETS"
               small
               color="success"
               class="ml-2"
               min-width="100"
-              @click="storeBudgets()"
+              @click="store()"
             >
               Guardar
             </v-btn>
@@ -422,6 +426,7 @@
         </v-card-text>
       </material-card>
     </v-dialog>
+    <!-- ------ -->
     <v-overlay
       class="v-overlay-custom"
       :value="overlay"
@@ -448,7 +453,7 @@
     <v-dialog
       v-model="confirm"
       persistent
-      max-width="350"
+      width="350"
     >
       <v-card>
         <v-card-title class="text-h4">
@@ -478,6 +483,89 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Editar Distribución -->
+    <v-dialog
+      v-model="budgetEditDistribution"
+      persistent
+      width="500"
+    >
+      <material-card
+        full-header
+        light
+        inline
+        color="info"
+        class="mx-auto"
+      >
+        <template #heading>
+          <div class="text-center pa-5">
+            <div class="text-h4 white--text">
+              Distribución <br>
+              {{ mesInicial + ' ' + filter.anio }}  /  {{ mesFinal }} {{ filter.anio + 1 }}
+            </div>
+          </div>
+        </template>
+        <v-card-text>
+          <v-form>
+            <v-row align="center">
+              <v-col
+                cols="6"
+              >
+                <v-text-field
+                  v-model="item.city"
+                  label="Ciudad"
+                  type="text"
+                  placeholder="Ingrese el valor"
+                  :disabled="true"
+                />
+              </v-col>
+              <v-col
+                cols="6"
+              >
+                <v-text-field
+                  v-model="item.area"
+                  label="Area"
+                  type="text"
+                  placeholder="Ingrese el valor"
+                  :disabled="true"
+                />
+              </v-col>
+              <v-col
+                cols="12"
+              >
+                <v-text-field
+                  v-model="item.value"
+                  label="Valor"
+                  type="number"
+                  placeholder="Ingrese el valor"
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+          <div class="pa-3 text-center mt-2">
+            <v-btn
+              small
+              color="error"
+              min-width="100"
+              @click="budgetEditDistribution = false"
+            >
+              Cancelar
+            </v-btn>
+            <v-btn
+              small
+              color="success"
+              class="ml-2"
+              min-width="100"
+              @click="updateData()"
+            >
+              Guardar
+            </v-btn>
+          </div>
+        </v-card-text>
+      </material-card>
+    </v-dialog>
+    <!-- ------ -->
+    <!-- ----- -->
   </v-container>
 </template>
 
@@ -490,47 +578,87 @@
   export default {
     name: 'PresupuestoView',
     data: () => ({
+      headersSelected: [
+        {
+          text: 'Asignado',
+          value: 'value',
+          width: '16%',
+        },
+        {
+          text: 'Gastado',
+          value: 'spent',
+          width: '16%',
+        },
+        {
+          text: 'Disponible',
+          value: 'executed_budget',
+          width: '18%',
+        },
+      ],
       headers: [
         {
           text: 'Año',
           value: 'anio',
-          width: '8%',
+          width: '10%',
         },
         {
-          text: 'Total',
+          text: 'Ciudad',
+          value: 'city',
+          width: '10%',
+        },
+        {
+          text: 'Area',
+          value: 'area',
+          width: '15%',
+        },
+        {
+          text: 'Asignado',
           value: 'value',
-          width: '20%',
+          width: '16%',
         },
         {
-          text: 'Distribuido',
-          value: 'used_budget',
-          width: '20%',
-        },
-        {
-          text: 'Ejecutado',
-          value: 'executed_budget',
-          width: '19%',
+          text: 'Gastado',
+          value: 'spent',
+          width: '16%',
         },
         {
           text: 'Disponible',
-          value: 'available_budget',
-          width: '19%',
+          value: 'executed_budget',
+          width: '18%',
         },
         {
           sortable: false,
           text: 'Opciones',
           value: 'actions',
-          width: '14%',
+          width: '15%',
           align: 'center',
         },
       ],
       items: [],
+      isMain: [],
+      filter: {
+        anio: null,
+        city: null,
+      },
+      selectedItem: {
+        id: null,
+        anio: null,
+        value: null,
+        spent: null,
+        city: null,
+        area: null,
+        executed_budget: null,
+        budgets: [],
+      },
       item: {
         id: null,
         anio: null,
         value: null,
+        spent: null,
         city: null,
         area: null,
+        executed_budget: null,
+        is_main: null,
         budgets: [],
       },
       budget: {
@@ -541,6 +669,11 @@
       },
       displayDate: false,
       dialog: false,
+      budgetDistribution: false,
+      budgetEditDistribution: false,
+      periodData: null,
+      mesInicial: process.env.VUE_APP_MES_INICIAL,
+      mesFinal: process.env.VUE_APP_MES_FINAL,
       budgetService: null,
       search: undefined,
       overlay: false,
@@ -569,9 +702,27 @@
       ...get('session', [
         'userInfo',
       ]),
+      filteredItems () {
+        const searchQuery = (this.search || '').toLowerCase();
+        // Filtrar por area o city en lugar de value
+        return this.items.filter(item => item.area.toLowerCase().includes(searchQuery) || item.city.toLowerCase().includes(searchQuery));
+      },
+      computedItems () {
+        console.log('filteredItems:', this.filteredItems);
+        // Calcular executed_budget para cada elemento en filteredItems
+        return this.filteredItems.map(item => ({
+          ...item,
+          executed_budget: item.value - item.spent,
+        }));
+      },
+      totalFilteredValue () {
+        // Calcula la suma de 'value' para los elementos en filteredItems
+        return this.filteredItems.reduce((sum, item) => sum + item.value, 0);
+      },
     },
     watch: {
       searchCities (val) {
+        this.lstAreas = [];
         this.isLoadingCities = true;
         this.parameterService.filterCities(val).then(res => {
           const { count, entries } = res;
@@ -584,12 +735,16 @@
         });
       },
       searchAreas (val) {
-        if (!this.budget.city) return false;
+        console.log(this.item.city);
+        if (!this.item.city) return false;
         this.isLoadingAreas = true;
-        this.parameterService.filterAreasByCity(this.budget.city, val).then(res => {
+        this.parameterService.filterAreasByCity(this.item.city, val).then(res => {
           const { count, entries } = res;
           this.count = count;
           this.lstAreas = entries;
+          console.log(this.items);
+          this.lstAreas = this.lstAreas.filter(areaB => !this.items.some(itemA => itemA.area === areaB.area));
+          console.log(this.lstAreas);
           this.isLoadingAreas = false;
         }).catch((error) => {
           console.log('Error::::::', error);
@@ -604,11 +759,18 @@
     },
     mounted () {
       this.loadData();
+      this.getMainBudget();
     },
     methods: {
       loadData () {
+        if (this.filter.anio === null) {
+          const actualDate = new Date();
+          const month = actualDate.getMonth() + 1;
+          const actualAnio = month <= 7 ? actualDate.getFullYear() - 1 : actualDate.getFullYear();
+          this.filter.anio = actualAnio;
+        }
         this.overlay = true;
-        this.budgetService.all().then(response => {
+        this.budgetService.getAllByAnio(this.filter).then(response => {
           this.items = response.data;
           this.overlay = false;
         }).catch((error) => {
@@ -616,10 +778,57 @@
           this.overlay = false;
         });
       },
+      changeAnio () {
+        this.overlay = true;
+        this.budgetService.getAllByAnio(this.filter).then(response => {
+          this.items = response.data;
+          this.overlay = false;
+        }).catch((error) => {
+          console.log(error);
+          this.overlay = false;
+        });
+      },
+      actualizarFechaCompuesta () {
+        if (this.item.anio !== null) {
+          this.periodData = `${mesInicial} ${this.item.anio} / ${mesFinal} ${Number(this.item.anio) + 1}`;
+        }
+      },
+      getMainBudget () {
+        this.overlay = true;
+        this.budgetService.getMain().then(response => {
+          this.isMain = response.data;
+          console.log(this.isMain);
+          const foundBudget = this.isMain.find(budget => budget.anio === this.filter.anio);
+
+          if (foundBudget) {
+            this.selectedItem = {
+              id: foundBudget.id,
+              anio: foundBudget.anio,
+              value: foundBudget.value,
+              spent: foundBudget.spent,
+              city: foundBudget.city,
+              area: foundBudget.area,
+              executed_budget: foundBudget.value - foundBudget.spent,
+            };
+          }
+          console.log(this.selectedItem);
+          this.overlay = false;
+        }).catch((error) => {
+          console.log(error);
+          this.overlay = false;
+        });
+      },
+      openDistributeBudget () {
+        this.overlay = true;
+        this.item.anio = this.filter.anio;
+        this.budgetDistribution = true;
+        this.overlay = false;
+      },
       addData () {
         this.overlay = true;
         this.item.anio = null;
         this.item.value = null;
+        this.item.is_main = 1;
         this.displayDialog = true;
         this.overlay = false;
         this.isEdit = false;
@@ -636,7 +845,7 @@
         this.isEdit = true;
         this.item = Object.assign({}, item);
         this.overlay = false;
-        this.displayDialog = true;
+        this.budgetEditDistribution = true;
       },
       openConfirm (item) {
         this.item = Object.assign({}, item);
@@ -645,12 +854,16 @@
       store () {
         if (!this.isEdit) this.saveData();
         else this.updateData();
+        this.getMainBudget();
+      },
+      storeBudgetAnio () {
+
       },
       saveData () {
         // GUARDAR SOLICTUD
         this.overlay = true;
         const model = Object.assign({}, this.item);
-        this.budgetService.create(this.item).then(response => {
+        this.budgetService.store(this.item).then(response => {
           this.overlay = false;
           this.item = {};
           this.displayDialog = false;
@@ -660,7 +873,7 @@
             display: true,
             title: 'INFO: ',
             type: 'success',
-            message: response.message,
+            message: 'Presupuesto Creado con Éxito!',
           };
         }).catch((error) => {
           this.overlay = false;
@@ -707,7 +920,7 @@
         const model = Object.assign({}, this.item);
         this.budgetService.update(this.item, this.item.id).then(response => {
           this.overlay = false;
-          this.displayDialog = false;
+          this.budgetEditDistribution = false;
           this.file = null;
           this.loadData();
           this.snackbar = {
@@ -732,6 +945,18 @@
       deleteData () {
         // UPDATE
         this.overlay = true;
+        console.log(this.item.spent);
+        if (this.item.spent != null) {
+          this.snackbar = {
+            display: true,
+            title: 'Info: ',
+            type: 'error',
+            message: 'El presupuesto no puede ser eliminado si tiene gasto.',
+          };
+          this.overlay = false;
+          this.confirm = false;
+          return;
+        }
         this.budgetService.delete(this.item.id).then(response => {
           this.overlay = false;
           this.item = {};
