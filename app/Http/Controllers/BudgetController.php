@@ -28,29 +28,49 @@ class BudgetController extends Controller
      */
     public function index()
     {
-        
+
         $data = Budget::get();
         $response = [
             'success' => true,
             'data' => $data,
             'message' => 'List Budgets Successfully'
         ];
-        
+
         return response()->json($response, 200);
     }
-     
+
+    /**
+     * return the list of Main  
+     */
     public function MainBudgets()
-    {       
-        log::info("---- presupuesto principal -----");
+    {
+
 
         $mainBudgets = Budget::where('is_main', true)->get();
 
-        
+
         $response = [
             'success' => true,
             'data' => $mainBudgets,
             'message' => 'List Budgets Successfully'
         ];
+        return response()->json($response, 200);
+    }
+
+    public function GetByAnnio(Request $request)
+    {
+        $currentYear = $request->input('anio', now()->year);
+
+        $budgets = Budget::where('anio', $currentYear)
+            ->whereNull('is_main')
+            ->get();
+
+        $response = [
+            'success' => true,
+            'data' => $budgets,
+            'message' => 'List Budgets Successfully'
+        ];
+
         return response()->json($response, 200);
     }
 
@@ -61,8 +81,9 @@ class BudgetController extends Controller
      * @return \Illuminate\Http\Response
      * 
      */
-    public function store(Request $request) {
-        
+    public function store(Request $request)
+    {
+
         $input = $request->all();
         log::info($input);
         $budget = Budget::create($input);
@@ -74,7 +95,6 @@ class BudgetController extends Controller
         ];
 
         return response()->json($response, 200);
-
     }
 
     /**
@@ -85,8 +105,7 @@ class BudgetController extends Controller
      */
     public function storeOld(Request $request)
     {
-        try
-        {
+        try {
             $input = $request->all();
 
             $rules = [
@@ -116,18 +135,18 @@ class BudgetController extends Controller
             // VALIDAR QUE EL PRESUPUESTO NO EXISTA
             $budgetsAux = DB::table('budgets AS b')
                 ->select('b.*', DB::raw('null AS budgets'))
-                ->where('b.anio',$input['anio'])
+                ->where('b.anio', $input['anio'])
                 ->whereNull('city')
                 ->whereNull('area')
                 ->get();
-            
-            if($budgetsAux->count() > 0){
+
+            if ($budgetsAux->count() > 0) {
                 $response = [
                     'success' => true,
                     'data' => $budgetsAux,
                     'message' => 'El presupuesto para este año ya existe'
                 ];
-        
+
                 return response()->json($response, 500);
             }
 
@@ -148,7 +167,7 @@ class BudgetController extends Controller
             ];
 
             return response()->json($response, 200);
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollback();
             $response = [
                 'success' => false,
@@ -167,8 +186,7 @@ class BudgetController extends Controller
      */
     public function storeBudgets(Request $request)
     {
-        try
-        {
+        try {
             $input = $request->all();
 
             $rules = [
@@ -196,26 +214,25 @@ class BudgetController extends Controller
             // VALIDAR QUE EL PRESUPUESTO NO EXISTA
             $budgetsAux = DB::table('budgets AS b')
                 ->select(
-                    'b.*'
-                    , DB::raw('null AS budgets')
+                    'b.*',
+                    DB::raw('null AS budgets')
                 )
                 ->where('b.anio', $input['anio'])
                 ->whereNull('city')
                 ->whereNull('area')
                 ->get();
-            
-            if($budgetsAux->count() == 0){
+
+            if ($budgetsAux->count() == 0) {
                 $response = [
                     'success' => true,
                     'data' => $budgetsAux,
                     'message' => 'El presupuesto para este año no existe.'
                 ];
-        
+
                 return response()->json($response, 500);
             }
 
-            if($input['budgets'] != null)
-            {
+            if ($input['budgets'] != null) {
                 DB::beginTransaction();
 
                 // ELIMINAR EL EXISTENTE Y VOLVER A GUARDAR
@@ -234,15 +251,13 @@ class BudgetController extends Controller
                 }
 
                 DB::commit();
-            }
-            else
-            {
+            } else {
                 $response = [
                     'success' => true,
                     'data' => null,
                     'message' => 'No hay distribución de presupuesto para guardar.'
                 ];
-        
+
                 return response()->json($response, 500);
             }
 
@@ -253,7 +268,7 @@ class BudgetController extends Controller
             ];
 
             return response()->json($response, 200);
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollback();
             $response = [
                 'success' => false,
@@ -271,7 +286,7 @@ class BudgetController extends Controller
      * @param  \App\Models\Budget  $budget
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Budget $budget)
+    public function update(Request $request, $id)
     {
         $input = $request->all();
 
@@ -299,18 +314,29 @@ class BudgetController extends Controller
             return response()->json($response, 500);
         }
 
-        $budget->anio = $input['anio'];
-        $budget->value = $input['value'];
-        $budget->city = $input['city'];
-        $budget->area = $input['area'];
-
-        // GUARDAR
-        $budget->save();
-
+        $budget = Budget::findOrFail($id);
+        $budget->update($request->all());
         $response = [
             'success' => true,
             'data' => $budget,
             'message' => 'Presupuesto actualizado correctamente.'
+        ];
+
+        return response()->json($response, 200);
+    }
+
+    public function delete($id)
+    {
+
+        $budget = Budget::findOrFail($id);
+        $budget->delete();
+
+        $data = null;
+
+        $response = [
+            'success' => true,
+            'data' => $data,
+            'message' => 'Especialidad eliminada correctamente.'
         ];
 
         return response()->json($response, 200);
@@ -324,8 +350,7 @@ class BudgetController extends Controller
      */
     public function destroy(Budget $budget)
     {
-        try
-        {
+        try {
             DB::beginTransaction();
 
             // ELIMINAR EL EXISTENTE Y VOLVER A GUARDAR
@@ -345,7 +370,7 @@ class BudgetController extends Controller
             ];
 
             return response()->json($response, 200);
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollback();
             $response = [
                 'success' => false,

@@ -93,9 +93,13 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::get('cycles', 'App\Http\Controllers\CycleController@index');
     
     Route::get('budgets/mainbudgets', 'App\Http\Controllers\BudgetController@MainBudgets');
+    
     Route::get('budgets', 'App\Http\Controllers\BudgetController@index');  
-    Route::post('budgets/store', 'App\Http\Controllers\BudgetController@storeBudgets');
+    Route::post('budgets/store', 'App\Http\Controllers\BudgetController@store');
+    Route::post('/budgets/filter', 'App\Http\Controllers\BudgetController@GetByAnnio');
     Route::post('budgets/storemain', 'App\Http\Controllers\BudgetController@store');
+    Route::delete('/budgets/{id}', 'App\Http\Controllers\BudgetController@delete');
+    Route::put('/budgets/{id}', 'App\Http\Controllers\BudgetController@update');
     
     Route::get('parameters/areas/all','App\Http\Controllers\ParameterController@getAllAreas');
     Route::get('parameters/positions/area/{area}','App\Http\Controllers\ParameterController@getPositionsByArea');
