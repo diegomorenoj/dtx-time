@@ -12,11 +12,11 @@
           <span
             v-if="userInfo.rol_id == 4 || userInfo.rol_id == 5"
             style="font-weight: bold;"
-          >&nbsp;- Ciudad: {{ userInfo.city }}</span>
+          >&nbsp;- Ciudad: {{ userInfo.city }} <br> {{ mesInicial }}  {{ filter.anio }}  /  {{ mesFinal }} {{ filter.anio + 1 }}  </span>
         </p>
       </v-col>
       <v-col
-        cols="3"
+        cols="2"
       >
         <v-select
           v-model="filter.anio"
@@ -29,7 +29,7 @@
         />
       </v-col>
       <v-col
-        cols="2"
+        cols="3"
       >
         <div class="pb-6 text-right">
           <v-btn
@@ -45,12 +45,26 @@
             </v-icon>
             Nuevo presupuesto
           </v-btn>
+          <app-btn
+            v-if="userInfo.permits.CREATE_BUDGETS"
+            color="success"
+            class="px-2 ml-1"
+            elevation="0"
+            min-width="0"
+            small
+            @click="editBudgetMain()"
+          >
+            <v-icon
+              small
+              v-text="'mdi-pencil'"
+            />
+          </app-btn>
         </div>
       </v-col>
       <v-col cols="2">
         <div class="pb-6 text-right">
           <v-btn
-            v-if="userInfo.permits.CREATE_BUDGETS"
+            v-if="userInfo.permits.UPDATE_BUDGETS"
             small
             color="info"
             min-width="100"
@@ -66,19 +80,23 @@
       </v-col>
       <v-col cols="2">
         <div class="pb-6 text-right">
-          <v-btn
-            v-if="userInfo.permits.CREATE_BUDGETS"
-            small
-            color="primary"
-            min-width="100"
-            class="mr-2"
-            @click="addData()"
+          <download-excel
+            class="ml-2 v-btn mr-5 v-btn--is-elevated v-btn--has-bg theme--light v-size--small primary"
+            :data="computedItems"
+            :fields="json_fields"
+            :header="`Resumen ${mesInicial + ' ' + filter.anio}  /  ${mesFinal} ${filter.anio + 1} `"
+            :worksheet="`Presupuesto_${filter.anio}`"
+            :name="`Presupuesto${filter.anio}.xls`"
           >
-            <v-icon left>
-              mdi-microsoft-excel
+            <v-icon
+              left
+              dark
+              small
+            >
+              mdi-file-excel
             </v-icon>
-            Exportar
-          </v-btn>
+            Descargar
+          </download-excel>
         </div>
       </v-col>
     </v-row>
@@ -86,6 +104,7 @@
       &nbsp;
     </div>
     <material-card
+      v-if="userInfo.permits.UPDATE_BUDGETS"
       icon="mdi-cash"
       icon-small
       color="error"
@@ -104,9 +123,6 @@
                 style="font-weight: bold;"
               >
                 <tr>
-                  <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px;">
-                    Año
-                  </th>
                   <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
                     Valor
                   </th>
@@ -114,13 +130,12 @@
                     Gastado
                   </th>
                   <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
-                    Presupuesto Ejecutado
+                    Disponible
                   </th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="selectedItem">
-                  <td>{{ selectedItem.anio }}</td>
                   <td>{{ formatPrice(selectedItem.value) }}</td>
                   <td>{{ formatPrice(selectedItem.spent) }}</td>
                   <td>{{ formatPrice(selectedItem.executed_budget) }}</td>
@@ -142,18 +157,34 @@
       title="Distribución"
     >
       <v-card-text>
-        <div v-if="totalFilteredValue !== null">
-          <strong>Total Filtrado:</strong> {{ formatPrice(totalFilteredValue) }}
-        </div>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          class="ml-auto"
-          hide-details
-          label="Buscar registros"
-          single-line
-          style="width: 250px;"
-        />
+        <v-row>
+          <v-col
+            class="text-right"
+            cols="7"
+          />
+          <v-col
+            class="text-right"
+            cols="3"
+          >
+            <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              class="ml-auto"
+              hide-details
+              label="Buscar registros"
+              single-line
+              style="width: 250px;"
+            />
+          </v-col>
+          <v-col
+            cols="2"
+            class="text-right"
+            style="line-height: 72px;"
+          >
+            <strong>Asignado:</strong> {{ formatPrice(totalFilteredValue) }}
+          </v-col>
+        </v-row>
+
         <v-divider class="mt-3" />
 
         <v-data-table
@@ -185,29 +216,11 @@
           <template v-slot:[`item.available_budget`]="data">
             {{ formatPrice(data.item.available_budget) }}
           </template>
-          <template v-slot:[`item.actions`]="data">
+          <template
+            v-if="userInfo.permits.UPDATE_BUDGETS"
+            v-slot:[`item.actions`]="data"
+          >
             <div>
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <app-btn
-                    color="success"
-                    class="px-2 ml-1"
-                    elevation="0"
-                    min-width="0"
-                    small
-                    v-bind="attrs"
-                    :disabled="!userInfo.permits.READ_DISTRIBUTE_BUDGETS"
-                    v-on="on"
-                    @click="distributeBudget(data.item)"
-                  >
-                    <v-icon
-                      small
-                      v-text="'mdi-currency-usd'"
-                    />
-                  </app-btn>
-                </template>
-                <span>Distribuir presupuesto</span>
-              </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <app-btn
@@ -286,6 +299,7 @@
                   label="Año"
                   type="number"
                   placeholder="Ingrese el año"
+                  :disabled="isEdit"
                 />
               </v-col>
               <v-col
@@ -320,7 +334,7 @@
               min-width="100"
               @click="store()"
             >
-              Guardar
+              {{ isEdit ? 'Editar' : 'Guardar' }}
             </v-btn>
           </div>
         </v-card-text>
@@ -595,50 +609,12 @@
           width: '18%',
         },
       ],
-      headers: [
-        {
-          text: 'Año',
-          value: 'anio',
-          width: '10%',
-        },
-        {
-          text: 'Ciudad',
-          value: 'city',
-          width: '10%',
-        },
-        {
-          text: 'Area',
-          value: 'area',
-          width: '15%',
-        },
-        {
-          text: 'Asignado',
-          value: 'value',
-          width: '16%',
-        },
-        {
-          text: 'Gastado',
-          value: 'spent',
-          width: '16%',
-        },
-        {
-          text: 'Disponible',
-          value: 'executed_budget',
-          width: '18%',
-        },
-        {
-          sortable: false,
-          text: 'Opciones',
-          value: 'actions',
-          width: '15%',
-          align: 'center',
-        },
-      ],
       items: [],
       isMain: [],
       filter: {
         anio: null,
         city: null,
+        area: null,
       },
       selectedItem: {
         id: null,
@@ -666,6 +642,13 @@
         value: null,
         city: null,
         area: null,
+      },
+      json_fields: {
+        Ciudad: 'city',
+        Area: 'area',
+        Asignado: 'value',
+        Ejecutado: 'spent',
+        Disponible: 'executed_budget',
       },
       displayDate: false,
       dialog: false,
@@ -702,10 +685,61 @@
       ...get('session', [
         'userInfo',
       ]),
+
+      headers () {
+        const headers = [
+          {
+            text: 'Ciudad',
+            value: 'city',
+            width: '10%',
+          },
+          {
+            text: 'Area',
+            value: 'area',
+            width: '25%',
+          },
+          {
+            text: 'Asignado',
+            value: 'value',
+            width: '16%',
+            align: 'right',
+          },
+          {
+            text: 'Gastado',
+            value: 'spent',
+            width: '16%',
+            align: 'right',
+          },
+          {
+            text: 'Disponible',
+            value: 'executed_budget',
+            width: '18%',
+            align: 'right',
+          },
+        ];
+
+        if (this.userInfo.permits.UPDATE_BUDGETS) {
+          // Agregar columna de opciones solo si el usuario tiene permisos de actualización
+          headers.push({
+            sortable: false,
+            text: 'Opciones',
+            value: 'actions',
+            width: '15%',
+            align: 'center',
+          });
+        }
+
+        return headers;
+      },
       filteredItems () {
         const searchQuery = (this.search || '').toLowerCase();
         // Filtrar por area o city en lugar de value
-        return this.items.filter(item => item.area.toLowerCase().includes(searchQuery) || item.city.toLowerCase().includes(searchQuery));
+        return this.items.filter(item => {
+          if (item && item.area) {
+            return item.area.toLowerCase().includes(searchQuery);
+          }
+          return false;
+        });
       },
       computedItems () {
         console.log('filteredItems:', this.filteredItems);
@@ -771,12 +805,29 @@
         }
         this.overlay = true;
         this.budgetService.getAllByAnio(this.filter).then(response => {
-          this.items = response.data;
+          this.items = this.filterDataByUserRole(response.data);
           this.overlay = false;
         }).catch((error) => {
           console.log(error);
           this.overlay = false;
         });
+      },
+      filterDataByUserRole (data) {
+        const userRole = this.userInfo.rol_id;
+
+        // Filtrar por ciudad si el rol del usuario es 4
+        if (userRole === 4) {
+          return data.filter(item => item.city === this.userInfo.city);
+        }
+
+        // Filtrar por ciudad y área para otros roles según sea necesario
+        if (userRole === 5) {
+          // Ajusta OTRRO_ROL_ID según el valor correspondiente
+          return data.filter(item => item.city === this.userInfo.city && item.area === this.userInfo.area);
+        }
+
+        // Si el rol no requiere filtrado, devolver todos los datos sin cambios
+        return data;
       },
       changeAnio () {
         this.overlay = true;
@@ -833,6 +884,17 @@
         this.overlay = false;
         this.isEdit = false;
       },
+      editBudgetMain () {
+        this.overlay = true;
+        this.item.anio = this.selectedItem.anio;
+        this.item.value = this.selectedItem.value;
+        this.item.is_main = 1;
+        this.item.id = this.selectedItem.id;
+        this.displayDialog = true;
+        this.overlay = false;
+        this.isEdit = true;
+      },
+
       distributeBudget (item) {
         this.overlay = true;
         this.item = Object.assign({}, item);
