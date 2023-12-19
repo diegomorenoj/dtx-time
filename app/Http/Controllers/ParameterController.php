@@ -109,6 +109,7 @@ class ParameterController extends Controller
         $data = DB::table('users AS u')
             ->select('u.city')
             ->whereRaw('UPPER(u.city) LIKE UPPER("' . $_val . '")')
+            ->where('u.position', 'not like', 'cuenta%')
             ->orderBy('city', 'asc')
             ->distinct()
             ->get();
@@ -182,10 +183,10 @@ class ParameterController extends Controller
     {
         $_val = $val === null ? '%%' :  $val . '%';
 
-        $data = DB::table('users AS u')
-            ->select('u.area')
-            ->whereRaw('UPPER(u.city) = UPPER("' . $city . '")')
-            ->whereRaw('UPPER(u.area) LIKE UPPER("' . $_val . '")')
+        $data = DB::table('users')
+            ->select('area')
+            ->whereRaw('UPPER(city) = UPPER(?)', [$city])
+            ->whereRaw('UPPER(area) LIKE UPPER(?)', ["%$_val%"])
             ->orderBy('area', 'asc')
             ->distinct()
             ->get();
@@ -292,7 +293,7 @@ class ParameterController extends Controller
 
         switch ($this->user->rol_id) {
             case 1: // 1	Administrador
-                if($trainingRequest->status_id!=11) {
+                if ($trainingRequest->status_id != 11) {
                     $states[] = 1;
                     if ($trainingRequest->type == $this->payment) $states[] = 2;
                     $states[] = 3;
@@ -309,7 +310,7 @@ class ParameterController extends Controller
                 break;
 
             case 2: // 2	Usuario general
-                if($trainingRequest->status_id!=11) {
+                if ($trainingRequest->status_id != 11) {
                     if ($pre_en_curso->count() > 0) $states[] = 9;
                     if ($pre_completada_revision->count() > 0) $states[] = 10;
                 }
@@ -317,25 +318,25 @@ class ParameterController extends Controller
 
             case 3: // 3	Capacitaciones
 
-                if($trainingRequest->status_id!=11) {
+                if ($trainingRequest->status_id != 11) {
                     // SOLO PAGAS MENORES O IGUALES AL LIMITE
                     if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2;
                     if ($pre_en_curso->count() > 0) $states[] = 9;
-                    if ($pre_completada->count() > 0) $states[] = 11;      
-                    $states[] = 1;              
-                }               
+                    if ($pre_completada->count() > 0) $states[] = 11;
+                    $states[] = 1;
+                }
 
                 break;
 
             case 4: // 4	Encargado de oficina
-                if($trainingRequest->status_id!=11) {
+                if ($trainingRequest->status_id != 11) {
                     $states[] = 5;
                     $states[] = 8;
                 }
                 break;
 
             case 5: // 5	Socio
-                if($trainingRequest->status_id!=11) {
+                if ($trainingRequest->status_id != 11) {
                     $states[] = 0;
                     // CURSOS DE LA CIUDAD DE MEXICO
                     if (str_contains($city_name, $this->city_mx)) {
@@ -347,7 +348,7 @@ class ParameterController extends Controller
 
             case 6: // 6	Socio de capacitaciones
 
-                if($trainingRequest->status_id!=11) {
+                if ($trainingRequest->status_id != 11) {
                     $states[] = 8;
                     // CURSOS DE LA CIUDAD DE MEXICO
                     if (str_contains($city_name, $this->city_mx)) {
@@ -363,7 +364,7 @@ class ParameterController extends Controller
 
             case 7: // 7	Socio Director
                 // CURSOS DE LA CIUDAD DE MEXICO
-                if($trainingRequest->status_id!=11) {
+                if ($trainingRequest->status_id != 11) {
                     if (str_contains($city_name, $this->city_mx)) {
                         if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) {
                             $states[] = 4;
@@ -385,7 +386,7 @@ class ParameterController extends Controller
         // ESTADO DE LA CAPACITACIÓN EXTERNA
         $states[] = $trainingRequest->status_id;
 
-        Log::info($states); 
+        Log::info($states);
 
         $data = DB::table('parameters')
             ->whereIn('id', $states)

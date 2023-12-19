@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\TrainingRequest;
 use App\Models\TrainingRequestUser;
 use App\Models\Course;
+use App\Models\Budget;
 use App\Models\UserCourse;
 use App\Models\User;
 use App\Models\Parameter;
@@ -154,21 +155,21 @@ class TrainingRequestController extends Controller
             /**
              * 
              * 1	Administrador
-            * 2	Usuario general
-            * 3	Capacitaciones
-            * 4	Encargado de oficina
-            * 5	Socio
-            * 6	Socio de capacitaciones
-            * 7	Socio Director
-            * 8	Finanzas
-            * 9	Secretaria
-            * 10	Gerente
+             * 2	Usuario general
+             * 3	Capacitaciones
+             * 4	Encargado de oficina
+             * 5	Socio
+             * 6	Socio de capacitaciones
+             * 7	Socio Director
+             * 8	Finanzas
+             * 9	Secretaria
+             * 10	Gerente
 
              * 
              */
 
             // VALIDAR EL USUARIO
-            if ($this->user->rol_id === 2 ) {
+            if ($this->user->rol_id === 2) {
                 $user_id = $this->user->id; // SOLO LO DE CADA UNO
                 $create_user_id = $this->user->id;
             } else { // AL 1: ADMIN Y AL ROL 3: CAPACITACIONES SE LE CARGAN TODAS
@@ -180,7 +181,7 @@ class TrainingRequestController extends Controller
             }
 
             // VALIDAR LA CIUDAD
-            if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 10 ) // PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
+            if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 10) // PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
             {
                 $city = $this->user->city;
             } else $city = $input['city'] === null ? '%%' : $input['city'];
@@ -649,11 +650,11 @@ class TrainingRequestController extends Controller
             $trainingRequest = new TrainingRequest;
             $trainingRequest->type = $input['type'];
             $trainingRequest->status_id = $input['status_id'];
-            
+
             $trainingRequest->name = $input['shortname'];
             $trainingRequest->shortname = $input['shortname'];
             $trainingRequest->institute = $input['institute'];
-            $trainingRequest->category = "Capacitación Externa - ".$input['type'];
+            $trainingRequest->category = "Capacitación Externa - " . $input['type'];
             $trainingRequest->hours = $input['hours'];
             $trainingRequest->start_date = $input['start_date'];
             $trainingRequest->end_date = $input['end_date'];
@@ -670,10 +671,10 @@ class TrainingRequestController extends Controller
 
             // GUARDAR
             $trainingRequest->save();
-            
+
             // Luego de guardar generamos el code y guardamos
             $firstLetterOfType = strtoupper(substr($trainingRequest->type, 0, 1));
-            $code = "CE" . $firstLetterOfType ."-". $trainingRequest->id;
+            $code = "CE" . $firstLetterOfType . "-" . $trainingRequest->id;
             $trainingRequest->code = $code;
             $trainingRequest->save();
 
@@ -1053,10 +1054,91 @@ class TrainingRequestController extends Controller
     {
         try {
             $input = $request->all();
+            $budgetsCheck = collect();
+            $budgetsAnnio = null;
+            Log::info('Cambiar de estado');
+            Log::info($input);
 
 
             $trainingRequest = TrainingRequest::find($id);
+
             $statusId = $input['status_id'];
+
+            // Tomar los usuarios asociados a la capacitación
+
+            $users = TrainingRequestUser::where('training_request_id', $id)->get();
+
+            // Unir userOwner y users en un solo array llamado userTraining
+
+
+            // Primera validación para statusId 3 
+            if ($statusId == 3) {
+                $year = substr($trainingRequest->start_date, 0, 4);
+
+                $budgetsAnnio = Budget::where('anio', $year)
+                    ->where('is_main', true)
+                    ->first();
+
+                Log::info('año ');
+                Log::info($budgetsAnnio);
+
+                if ($budgetsAnnio === null) {
+                    $response = [
+                        'success' => false,
+                        'data' => $trainingRequest,
+                        'message' => 'El Ciclo no tiene un presupuesto '
+                    ];
+
+                    return response()->json($response, 400);
+                }
+
+                $userOwner = User::find($trainingRequest->user_id);
+
+                // Obtener los presupuestos como una colección y luego convertirlos en un array
+                $budgetsOwner = Budget::where('anio', $year)
+                    ->where('city', $userOwner->city)
+                    ->where('area', $userOwner->area)
+                    ->get();
+
+                $budgetsCheck = $budgetsCheck->merge($budgetsOwner);
+
+                if ($budgetsOwner->isEmpty()) {
+
+                    $response = [
+                        'success' => false,
+                        'data' => $trainingRequest,
+                        'message' => 'La ciudad.' . $userOwner->city . " en área " . $userOwner->area . " No cuenta con presupuesto, contacte con el área de capacitaciones."
+                    ];
+
+                    return response()->json($response, 400);
+                }
+
+                foreach ($users as $userTraining) {
+                    $user = User::find($userTraining->user_id);
+
+                    // Obtener presupuestos y convertirlos directamente en un array
+                    $budgets = Budget::where('anio', $year)
+                        ->where('city', $user->city)
+                        ->where('area', $user->area)
+                        ->get();
+
+
+
+                    if ($budgets->isEmpty()) {
+
+                        $response = [
+                            'success' => false,
+                            'data' => $trainingRequest,
+                            'message' => 'La ciudad.' . $user->city . " en área " . $user->area . " No cuenta con presupuesto, contacte con el área de capacitaciones."
+                        ];
+
+                        return response()->json($response, 400);
+                    }
+
+                    $budgetsCheck = $budgetsCheck->merge($budgets);
+                }
+            }
+
 
             $tr = TrainingRequestsLog::where('training_request_id', $id)->where('before_status_id', $statusId)->get();
 
@@ -1126,9 +1208,6 @@ class TrainingRequestController extends Controller
 
                 // ASOCAIR LOS USUARIOS AL CURSO
 
-                // Tomar los usuarios asociados a la capacitación
-                $users = TrainingRequestUser::where('training_request_id', $id)->get();
-
                 // CREAR LA RELACIÓN
                 foreach ($users as $user) {
                     $userCourse = new UserCourse;
@@ -1164,7 +1243,7 @@ class TrainingRequestController extends Controller
                 Log::info($course);
                 if ($course) {
                     // 2. Cambiar el estado del curso
-                    $course->status_id =13; 
+                    $course->status_id = 13;
                     $course->save();
 
                     // 3. Encontrar y actualizar los UserCourse
@@ -1173,9 +1252,9 @@ class TrainingRequestController extends Controller
 
                     foreach ($userCourses as $userCourse) {
                         // Aquí actualizas las propiedades que necesitas
-                        $userCourse->hours = $course->hours; 
-                        $userCourse->qualification = '10'; 
-                        $userCourse->progress ='100'; 
+                        $userCourse->hours = $course->hours;
+                        $userCourse->qualification = '10';
+                        $userCourse->progress = '100';
 
                         // Guardar los cambios
                         $userCourse->save();
@@ -1183,11 +1262,41 @@ class TrainingRequestController extends Controller
                 }
             }
 
+            /**
+             * se modifica la distribución
+             */
+
+            if ($statusId == 3) {
+                // Convertir $budgetsCheck a colección para manipulación
+
+                Budget::where('id', $budgetsAnnio->id)
+                        ->update([
+                            'spent' => DB::raw("IF(spent IS NULL, $trainingRequest->fee, spent + $trainingRequest->fee)")
+                        ]);
+
+                // Dividir fee por el tamaño de $budgetsCheck
+                $amountToAdd = $trainingRequest->fee / $budgetsCheck->count();
+
+
+                // Iterar sobre $budgetsCheck y actualizar cada presupuesto
+                foreach ($budgetsCheck as $budget) {
+                    // Actualizamos el presupuesto por Año / Area / Ciudad
+                    
+                    Budget::where('id', $budget->id)
+                        ->update([
+                            'spent' => DB::raw("IF(spent IS NULL, $amountToAdd, spent + $amountToAdd)")
+                        ]);
+                }
+            }
+
+
             DB::commit();
 
             // ***************************************************************************************
             // INICIO NOTIFICACIONES DE CAMBIO DE ESTADO DE UNA CAPACITACIÓN EXTERNA
             // ***************************************************************************************
+
+
             $this->statusNotifyMail($trainingRequest, $oldStatus, $newStatus);
             // ***************************************************************************************
             // FIN NOTIFICACIONES DE CAMBIO DE ESTADO DE UNA CAPACITACIÓN EXTERNA
