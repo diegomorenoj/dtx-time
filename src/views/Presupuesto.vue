@@ -181,7 +181,7 @@
             class="text-right"
             style="line-height: 72px;"
           >
-            <strong>Asignado:</strong> {{ formatPrice(totalFilteredValue) }}
+            <strong style="color:#000">Asignado:</strong> {{ formatPrice(totalFilteredValue) }}
           </v-col>
         </v-row>
 
@@ -929,6 +929,7 @@
           this.overlay = false;
           this.item = {};
           this.displayDialog = false;
+          this.budgetDistribution = false;
           this.displayBudget = false;
           this.loadData();
           this.snackbar = {
@@ -983,6 +984,8 @@
         this.budgetService.update(this.item, this.item.id).then(response => {
           this.overlay = false;
           this.budgetEditDistribution = false;
+          this.displayDialog = false;
+          this.displayBudget = false;
           this.file = null;
           this.loadData();
           this.snackbar = {
