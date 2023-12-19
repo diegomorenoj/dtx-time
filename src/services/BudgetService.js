@@ -6,6 +6,18 @@ export default class BudgetService {
         });
     }
 
+    getMain () {
+        return axios.get(`${process.env.VUE_APP_RUTA_API}/budgets/mainbudgets`).then(res => {
+            return res.data;
+        });
+    }
+
+    getAllByAnio (filter) {
+        return axios.post(`${process.env.VUE_APP_RUTA_API}/budgets/filter`, filter).then(res => {
+            return res.data;
+        });
+    }
+
     create (data) {
         return axios.post(`${process.env.VUE_APP_RUTA_API}/budgets`, data).then(res => {
             return res.data;
