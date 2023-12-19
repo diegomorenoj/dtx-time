@@ -18,4 +18,9 @@ class TrainingRequestUser extends Model
         'training_request_id',
         'user_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
