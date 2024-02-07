@@ -1073,7 +1073,29 @@ class TrainingRequestController extends Controller
 
             // Primera validación para statusId 3 
             if ($statusId == 3) {
-                $year = substr($trainingRequest->start_date, 0, 4);
+
+                Log::info($trainingRequest->start_date);
+                $start_date = $trainingRequest->start_date;
+
+                // Extraer el año, el mes y el día de la fecha de inicio.
+                $year = substr($start_date, 0, 4);
+                $month = substr($start_date, 5, 2);
+                $day = substr($start_date, 8, 2);
+
+                // Convertir a enteros para comparar.
+                $year = (int) $year;
+                $month = (int) $month;
+                $day = (int) $day;
+                Log::info($year);
+
+                // Comprobar si la fecha es hasta el 31 de Julio incluido.
+                if ($month <= 7) {
+                    // Si es hasta el 31 de Julio, se usa el año anterior.
+                    Log::info("Restar");
+                    $year = $year - 1;
+                }
+
+                Log::info($year);
 
                 $budgetsAnnio = Budget::where('anio', $year)
                     ->where('is_main', true)
@@ -1270,9 +1292,9 @@ class TrainingRequestController extends Controller
                 // Convertir $budgetsCheck a colección para manipulación
 
                 Budget::where('id', $budgetsAnnio->id)
-                        ->update([
-                            'spent' => DB::raw("IF(spent IS NULL, $trainingRequest->fee, spent + $trainingRequest->fee)")
-                        ]);
+                    ->update([
+                        'spent' => DB::raw("IF(spent IS NULL, $trainingRequest->fee, spent + $trainingRequest->fee)")
+                    ]);
 
                 // Dividir fee por el tamaño de $budgetsCheck
                 $amountToAdd = $trainingRequest->fee / $budgetsCheck->count();
@@ -1281,7 +1303,7 @@ class TrainingRequestController extends Controller
                 // Iterar sobre $budgetsCheck y actualizar cada presupuesto
                 foreach ($budgetsCheck as $budget) {
                     // Actualizamos el presupuesto por Año / Area / Ciudad
-                    
+
                     Budget::where('id', $budget->id)
                         ->update([
                             'spent' => DB::raw("IF(spent IS NULL, $amountToAdd, spent + $amountToAdd)")
