@@ -96,16 +96,32 @@ class CourseController extends Controller
 
             $response = [
                 'success' => true,
-                'message' => 'Los usuarios se importaron con éxito!',
+                'message' => 'Los cursos se importaron con éxito!',
                 'errors' => '',
             ];
     
             return response()->json($response, 200);
             
         } catch (\Exception $e) {
-            // Retornar un error si algo sale mal
+            // Verificar si el error es una violación de integridad de restricción
+            if ($e instanceof \Illuminate\Database\QueryException && $e->getCode() == 23000) {
+                // Analizar el mensaje de error para identificar el campo problemático
+                $errorMessage = $e->getMessage();
+                if (strpos($errorMessage, 'foreign key constraint fails') !== false) {
+                    // Asumiendo que puedes extraer el nombre del campo de la cadena de mensaje de error
+                    preg_match('/`([^`]*)`/', $errorMessage, $matches);
+                    $fieldName = $matches[1] ?? 'un campo específico';
+        
+                    return response()->json([
+                        'message' => "Hubo un error al importar los cursos. Por favor, verifica que todos los valores en Especialidad, Proveedor y Estado, sean válidos y estén creados en el sistema"
+                    ], 500);
+                }
+            }
+        
+            // Para otros tipos de excepciones, retorna el mensaje original
             return response()->json(['message' => 'Hubo un error al importar los cursos. ' . $e->getMessage()], 500);
         }
+        
     }
 
     public function getByFilter(Request $request)
