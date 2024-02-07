@@ -963,7 +963,7 @@
           { key: 'code', validation: val => typeof val === 'string', typeDescription: 'String' },
           { key: 'shortname', validation: val => typeof val === 'string', typeDescription: 'String' },
           { key: 'category', validation: val => typeof val === 'string', typeDescription: 'String' },
-          { key: 'hours', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'hours', validation: val => val === undefined || val === null || typeof val === 'number', typeDescription: 'Numérico' },
           { key: 'start_date', validation: val => typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val), typeDescription: 'Fecha (YYYY-MM-DD)' },
           { key: 'end_date', validation: val => typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val), typeDescription: 'Fecha (YYYY-MM-DD)' },
           { key: 'provider_id', validation: val => typeof val === 'number', typeDescription: 'Numérico' },
@@ -977,6 +977,11 @@
           const rowNumber = index + 2;
 
           for (const col of columnsToCheck) {
+            // Para specialty_id, permitir que el valor sea undefined o null
+            if (col.key === 'specialty_id' && (item[col.key] === undefined || item[col.key] === null)) {
+              continue; // No genera error y continúa con la siguiente columna
+            }
+
             if (!item[col.key] || !col.validation(item[col.key])) { // Verifica que no esté vacío y pasa la validación
               const error = `Fila ${rowNumber}: Error en la columna '${col.key}'. El campo no puede estar vacío y debe ser del tipo '${col.typeDescription}'.`;
               this.validationErrors.push(error);
@@ -993,9 +998,9 @@
           { key: 'course_code', validation: val => typeof val === 'string', typeDescription: 'String' },
           { key: 'user_email', validation: val => typeof val === 'string', typeDescription: 'String' },
           { key: 'attend_how', validation: val => typeof val === 'string', typeDescription: 'String' },
-          { key: 'progress', validation: val => val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
-          { key: 'qualification', validation: val => val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
-          { key: 'hours', validation: val => val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'progress', validation: val => val === undefined || val === false || val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'qualification', validation: val => val === undefined || val === false || val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
+          { key: 'hours', validation: val => val === undefined || val === false || val === 0 || typeof val === 'number', typeDescription: 'Numérico' },
           { key: 'status', validation: val => typeof val === 'string', typeDescription: 'String' },
         ];
 
@@ -1005,6 +1010,11 @@
 
           for (const col of columnsToCheck) {
             console.log(`${col.key} value: ${item[col.key]}, type: ${typeof item[col.key]}`);
+
+            if (item[col.key] === 0) {
+              continue;
+            }
+
             if (!item[col.key] || !col.validation(item[col.key])) { // Verifica que no esté vacío y pasa la validación
               const error = `Fila ${rowNumber}: Error en la columna '${col.key}'. El campo no puede estar vacío y debe ser del tipo '${col.typeDescription}'.`;
               this.validationErrors.push(error);
@@ -1073,7 +1083,7 @@
                 const uniqueErrors = [...new Set(error.response.data.errors)];
                 this.errors = uniqueErrors.join('<br /> ');
               } else {
-                this.errors = 'Hubo un error durante la importación.';
+                this.errors = error.response.data.message;
               }
             }
           } else {
@@ -1091,7 +1101,7 @@
                 const uniqueErrors = [...new Set(error.response.data.errors)];
                 this.errors = uniqueErrors.join('<br /> ');
               } else {
-                this.errors = 'Hubo un error durante la importación.';
+                this.errors = error.response.data.message;
               }
             }
           }

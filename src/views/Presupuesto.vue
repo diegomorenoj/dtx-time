@@ -127,6 +127,12 @@
                     Valor
                   </th>
                   <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
+                    Distribuido
+                  </th>
+                  <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
+                    Por Distribuir
+                  </th>
+                  <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
                     Gastado
                   </th>
                   <th style="width: 25%; font-weight: bold; color:#000; border-bottom: #9c27b0 solid 1px; ">
@@ -137,6 +143,10 @@
               <tbody>
                 <tr v-if="selectedItem">
                   <td>{{ formatPrice(selectedItem.value) }}</td>
+                  <td>{{ formatPrice(assigned) }}</td>
+                  <td :class="{ 'negative': selectedItem.to_assign < 0 }">
+                    {{ formatPrice(selectedItem.to_assign) }}
+                  </td>
                   <td>{{ formatPrice(selectedItem.spent) }}</td>
                   <td>{{ formatPrice(selectedItem.executed_budget) }}</td>
                 </tr>
@@ -211,8 +221,11 @@
             {{ formatPrice(data.item.spent) }}
           </template>
           <template v-slot:[`item.executed_budget`]="data">
-            {{ formatPrice(data.item.executed_budget) }}
+            <span :class="{'negative': data.item.executed_budget < 0}">
+              {{ formatPrice(data.item.executed_budget) }}
+            </span>
           </template>
+          <!-- Add by Lili: QF -->
           <template v-slot:[`item.available_budget`]="data">
             {{ formatPrice(data.item.available_budget) }}
           </template>
@@ -359,6 +372,7 @@
             <div class="text-h4 white--text">
               Distribución <br>
               {{ mesInicial + ' ' + filter.anio }}  /  {{ mesFinal }} {{ filter.anio + 1 }}
+              <br> <strong> Por Distribuir: {{ formatPrice(selectedItem.to_assign) }} </strong>
             </div>
           </div>
         </template>
@@ -538,7 +552,7 @@
               >
                 <v-text-field
                   v-model="item.area"
-                  label="Area"
+                  label="Área"
                   type="text"
                   placeholder="Ingrese el valor"
                   :disabled="true"
@@ -621,6 +635,7 @@
         anio: null,
         value: null,
         spent: null,
+        to_assign: null,
         city: null,
         area: null,
         executed_budget: null,
@@ -650,6 +665,7 @@
         Ejecutado: 'spent',
         Disponible: 'executed_budget',
       },
+      assigned: null,
       displayDate: false,
       dialog: false,
       budgetDistribution: false,
@@ -694,7 +710,7 @@
             width: '10%',
           },
           {
-            text: 'Area',
+            text: 'Área',
             value: 'area',
             width: '25%',
           },
@@ -770,14 +786,16 @@
       },
       searchAreas (val) {
         console.log(this.item.city);
+
         if (!this.item.city) return false;
         this.isLoadingAreas = true;
         this.parameterService.filterAreasByCity(this.item.city, val).then(res => {
           const { count, entries } = res;
           this.count = count;
           this.lstAreas = entries;
+          const filtered = this.items.filter(item => item.city === this.item.city);
           console.log(this.items);
-          this.lstAreas = this.lstAreas.filter(areaB => !this.items.some(itemA => itemA.area === areaB.area));
+          this.lstAreas = this.lstAreas.filter(areaB => !filtered.some(itemA => itemA.area === areaB.area));
           console.log(this.lstAreas);
           this.isLoadingAreas = false;
         }).catch((error) => {
@@ -806,6 +824,14 @@
         this.overlay = true;
         this.budgetService.getAllByAnio(this.filter).then(response => {
           this.items = this.filterDataByUserRole(response.data);
+          // Calcular la suma aquí
+          this.assigned = this.items.reduce((acc, item) => {
+            if (item.is_main === false || item.is_main === null) {
+              return acc + item.value;
+            }
+            return acc;
+          }, 0);
+          this.selectedItem.to_assign = this.selectedItem.value - this.assigned;
           this.overlay = false;
         }).catch((error) => {
           console.log(error);
@@ -841,7 +867,7 @@
       },
       actualizarFechaCompuesta () {
         if (this.item.anio !== null) {
-          this.periodData = `${mesInicial} ${this.item.anio} / ${mesFinal} ${Number(this.item.anio) + 1}`;
+          this.periodData = `${this.mesInicial} ${this.item.anio} / ${this.mesFinal} ${Number(this.item.anio) + 1}`;
         }
       },
       getMainBudget () {
@@ -860,6 +886,7 @@
               city: foundBudget.city,
               area: foundBudget.area,
               executed_budget: foundBudget.value - foundBudget.spent,
+              to_assign: foundBudget.value - this.assigned,
             };
           }
           console.log(this.selectedItem);
@@ -965,6 +992,7 @@
             type: 'success',
             message: response.message,
           };
+          
         }).catch((error) => {
           this.overlay = false;
           this.item = model;
@@ -1063,7 +1091,7 @@
               display: true,
               title: 'ERROR: ',
               type: 'error',
-              message: 'El area es requerida',
+              message: 'El área es requerida',
             };
           } else if (this.budget.value == null) {
             this.snackbar = {

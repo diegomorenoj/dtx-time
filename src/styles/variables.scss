@@ -11,6 +11,10 @@ $btn-font-sizes: (
   'default': .75rem
 );
 
+.negative {
+  color: red;
+}
+
 $btn-font-weight: 400;
 $btn-letter-spacing: normal;
 $material-light: (
