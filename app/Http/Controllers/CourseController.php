@@ -570,8 +570,9 @@ class CourseController extends Controller
     {
 
         try {
+
             $input = $request->all();
-            //$range = $input['range'] === null ? '%%' : $input['range'];
+            $range = $input['range'] === null ? '%%' : $input['range'];
             $name = $input['name'] === null ? '%%' : '%%' . $input['name'] . '%%';
             $user_email = $input['user_email'] === null ? '%%' : $input['user_email'];
             // $area = $input['area'] === null ? '%%' : $input['area'];
@@ -596,6 +597,7 @@ class CourseController extends Controller
             }
 
             if ($input['range'] !== null) {
+                log::info($input['range']);
                 $courses = DB::table('courses AS c')
                     ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
                     ->join('users AS u', 'u.id', '=', 'uc.user_id')
@@ -623,7 +625,7 @@ class CourseController extends Controller
                         'c.status_id'
                         // , DB::raw('DATE_FORMAT(c.created_at,"%b %d de %Y") AS date')
                     )
-                    ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
                     ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
                     ->whereRaw('u.email LIKE "' . $user_email . '"')
                     ->whereRaw('u.area LIKE "' . $area . '"')
@@ -692,7 +694,7 @@ class CourseController extends Controller
                             'uc.hours',
                             'u.email AS user_email'
                         )
-                        ->whereRaw("DATE_FORMAT(c.created_at,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                        ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
                         ->whereRaw('u.email LIKE "' . $user_email . '"')
                         ->whereRaw('uc.attend_how = "T"')
                         ->orderBy('c.created_at', 'desc')
