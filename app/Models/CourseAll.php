@@ -238,6 +238,11 @@ class CourseAll extends Model
             ->where('user_courses.attend_how', 'S')
             ->whereBetween('courses.start_date', [$startDate, $endDate]);
 
+           
+
+        $laravelHours = $laravelHoursQuery->sum('user_courses.hours');
+        
+        log::info($laravelHours);
 
         // Inicializar las horas de Moodle a 0
         $moodleHoursTotal = 0;

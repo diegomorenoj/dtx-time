@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use Adldap;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class LdapRepository {
 
@@ -57,7 +58,7 @@ class LdapRepository {
                         
                         for ($i=0; $i<$data["count"]; $i++) {
                             
-                            if(isset($data[$i]["givenname"]) && isset($data[$i]["department"]) && isset($data[$i]["mail"])){
+                            if(isset($data[$i]["givenname"]) && isset($data[$i]["physicaldeliveryofficename"]) && isset($data[$i]["department"]) && isset($data[$i]["mail"])){
                                 $user = new User();
                                 $user->lastname = $data[$i]["cn"][0];
                                 $user->name = $data[$i]["givenname"][0];
