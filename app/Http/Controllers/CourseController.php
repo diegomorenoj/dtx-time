@@ -1184,7 +1184,15 @@ class CourseController extends Controller
                         , 'T' AS attend_how
                         , u.email AS user_email
                         , (SELECT cd.value FROM mdl_customfield_data cd left join mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
-                        , (SELECT gg.finalgrade FROM mdl_grade_grades gg left join mdl_grade_items gi ON gi.id = gg.itemid WHERE gg.userid = u.id AND gi.courseid=c.id AND gi.itemtype = 'course') AS qualification
+                        , (SELECT round(avg(fv.value), 2) FROM mdl_feedback f
+                        LEFT JOIN mdl_feedback_item fi ON fi.feedback=f.id
+                        AND fi.typ='numeric'
+                        LEFT JOIN mdl_feedback_value fv ON fv.item=fi.id
+                        LEFT JOIN mdl_course_modules cm ON cm.course=f.course
+                        LEFT JOIN mdl_modules m ON m.id=cm.module
+                        WHERE f.completionsubmit=1
+                          AND m.name='feedback' and f.course=c.id
+                        GROUP BY f.course  ) AS qualification
                     FROM mdl_course c 
                         LEFT JOIN mdl_context cx ON c.id = cx.instanceid 
                         LEFT join mdl_role_assignments ra ON cx.id = ra.contextid AND ra.roleid = '3' 
@@ -1223,7 +1231,15 @@ class CourseController extends Controller
                         , 'T' AS attend_how
                         , u.email AS user_email
                         , (SELECT cd.value FROM mdl_customfield_data cd left join mdl_customfield_field cf ON cf.id=cd.fieldid WHERE cf.shortname='horascurso' AND cd.instanceid=c.id) AS hours
-                        , (SELECT gg.finalgrade FROM mdl_grade_grades gg left join mdl_grade_items gi ON gi.id = gg.itemid WHERE gg.userid = u.id AND gi.courseid=c.id AND gi.itemtype = 'course') AS qualification
+                        , (SELECT round(avg(fv.value), 2) FROM mdl_feedback f
+                        LEFT JOIN mdl_feedback_item fi ON fi.feedback=f.id
+                        AND fi.typ='numeric'
+                        LEFT JOIN mdl_feedback_value fv ON fv.item=fi.id
+                        LEFT JOIN mdl_course_modules cm ON cm.course=f.course
+                        LEFT JOIN mdl_modules m ON m.id=cm.module
+                        WHERE f.completionsubmit=1
+                          AND m.name='feedback' and f.course=c.id
+                        GROUP BY f.course  ) AS qualification
                     FROM mdl_course c 
                         LEFT JOIN mdl_context cx ON c.id = cx.instanceid 
                         LEFT join mdl_role_assignments ra ON cx.id = ra.contextid AND ra.roleid = '3' 
