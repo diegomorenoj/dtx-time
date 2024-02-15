@@ -24,7 +24,6 @@
           label="Seleccionar presupuesto"
           item-text="anio"
           item-value="anio"
-          clearable
           @change="changeAnio(); getMainBudget();"
         />
       </v-col>
@@ -302,17 +301,19 @@
           </div>
         </template>
         <v-card-text>
-          <v-form>
+          <v-form ref="form">
             <v-row align="center">
               <v-col
                 cols="5"
               >
                 <v-text-field
                   v-model="item.anio"
-                  label="Año"
+                  label="Año (*)"
                   type="number"
                   placeholder="Ingrese el año"
                   :disabled="isEdit"
+                  :rules="[v => !!v || 'El campo Año es obligatorio']"
+                  required
                 />
               </v-col>
               <v-col
@@ -320,15 +321,23 @@
               >
                 <v-text-field
                   v-model="item.value"
-                  label="Valor"
+                  label="Valor (*)"
                   type="number"
                   placeholder="Ingrese el valor"
+                  :rules="[v => !!v || 'El campo Valor es obligatorio']"
+                  required
                   @blur="actualizarFechaCompuesta"
                 />
               </v-col>
             </v-row>
             <v-row style="text-align:center">
               <v-col> {{ periodData }} </v-col>
+              <v-col
+                v-if="msgValidateYear"
+                style="color:#ff0000"
+              >
+                {{ msgValidateYear }}
+              </v-col>
             </v-row>
           </v-form>
           <div class="pa-3 text-center mt-2">
@@ -377,7 +386,7 @@
           </div>
         </template>
         <v-card-text>
-          <v-form>
+          <v-form ref="frmDistribucion">
             <v-row align="center">
               <v-col
                 cols="6"
@@ -397,6 +406,8 @@
                   placeholder="Empieza a escribir para Buscar"
                   prepend-icon="mdi-database-search"
                   :disabled="!userInfo.permits.SEARCH_CITIES_TRAINING"
+                  :rules="[v => !!v || 'El campo Ciudad es obligatorio']"
+                  required
                   @input="loadData()"
                 />
               </v-col>
@@ -417,6 +428,8 @@
                   placeholder="Empieza a escribir para Buscar"
                   prepend-icon="mdi-database-search"
                   :disabled="!userInfo.permits.SEARCH_AREAS_TRAINING"
+                  :rules="[v => !!v || 'El campo Area es obligatorio']"
+                  required
                   @input="loadData()"
                 />
               </v-col>
@@ -428,6 +441,8 @@
                   label="Valor"
                   type="number"
                   placeholder="Ingrese el valor"
+                  :rules="[v => !!v || 'El campo Valor es obligatorio']"
+                  required
                 />
               </v-col>
             </v-row>
@@ -446,7 +461,7 @@
               color="success"
               class="ml-2"
               min-width="100"
-              @click="store()"
+              @click="storeDistribution()"
             >
               Guardar
             </v-btn>
@@ -669,6 +684,7 @@
       displayDate: false,
       dialog: false,
       budgetDistribution: false,
+      isDistribution: false,
       budgetEditDistribution: false,
       periodData: null,
       mesInicial: process.env.VUE_APP_MES_INICIAL,
@@ -678,6 +694,7 @@
       overlay: false,
       displayDialog: false,
       displayBudget: false,
+      msgValidateYear: '',
       disabled: false,
       isEdit: false,
       confirm: false,
@@ -901,6 +918,7 @@
         this.item.anio = this.filter.anio;
         this.budgetDistribution = true;
         this.overlay = false;
+        this.isDistribution = true;
       },
       addData () {
         this.overlay = true;
@@ -910,6 +928,7 @@
         this.displayDialog = true;
         this.overlay = false;
         this.isEdit = false;
+        this.periodData = null;
       },
       editBudgetMain () {
         this.overlay = true;
@@ -935,28 +954,51 @@
         this.item = Object.assign({}, item);
         this.overlay = false;
         this.budgetEditDistribution = true;
+        this.resetForm();
       },
       openConfirm (item) {
         this.item = Object.assign({}, item);
         this.confirm = true;
       },
+      storeDistribution () {
+        if (this.$refs.frmDistribucion.validate()) {
+          if (!this.isEdit) this.saveData();
+          else this.updateData();
+          this.getMainBudget();
+        }
+      },
       store () {
-        if (!this.isEdit) this.saveData();
-        else this.updateData();
-        this.getMainBudget();
+        if (this.$refs.form.validate()) {
+          if (!this.isEdit) {
+            const anioIngresado = parseInt(this.item.anio);
+            const existeAnio = this.isMain.some(presupuesto => presupuesto.anio === anioIngresado);
+            if (existeAnio) {
+              this.msgValidateYear = 'El año ' + this.item.anio + ' ya tiene un presupuesto.';
+              return;
+            }
+            this.saveData();
+          } else { this.updateData(); }
+          this.getMainBudget();
+        }
       },
       storeBudgetAnio () {
 
       },
+      resetForm () {
+        if (this.isDistribution) this.$refs.form.reset(); else this.$refs.frmDistribucion.reset();
+        this.item = {};
+        console.log('Limpie el formulario....');
+      },
       saveData () {
-        // GUARDAR SOLICTUD
         this.overlay = true;
         const model = Object.assign({}, this.item);
         this.budgetService.store(this.item).then(response => {
+          console.log(response);
           this.overlay = false;
           this.item = {};
           this.displayDialog = false;
           this.budgetDistribution = false;
+          this.isDistribution = false;
           this.displayBudget = false;
           this.loadData();
           this.snackbar = {
@@ -965,14 +1007,21 @@
             type: 'success',
             message: 'Presupuesto Creado con Éxito!',
           };
+          this.resetForm();
         }).catch((error) => {
           this.overlay = false;
           this.item = model;
+
+          // Verifica si error.response existe antes de intentar acceder a error.response.data
+          const errorMessage = error.response && error.response.data && error.response.data.message
+            ? getErrorMessage(error.response.data.message)
+            : 'Se produjo un error inesperado. Por favor, inténtelo de nuevo.';
+
           this.snackbar = {
             display: true,
             title: 'ERROR: ',
             type: 'error',
-            message: getErrorMessage(error.response.data.message),
+            message: errorMessage,
           };
           this.displayDialog = true;
         });
@@ -992,7 +1041,6 @@
             type: 'success',
             message: response.message,
           };
-          
         }).catch((error) => {
           this.overlay = false;
           this.item = model;
@@ -1073,11 +1121,13 @@
         });
       },
       closeDialog () {
+        this.resetForm();
         this.item = {};
         this.disabled = true;
         this.displayDialog = false;
         this.displayBudget = false;
         this.overlay = false;
+        this.msgValidateYear = '';
         this.loadData();
       },
       removeBudget (index) {
