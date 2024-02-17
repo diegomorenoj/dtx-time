@@ -215,6 +215,24 @@
           >
             <div v-html="props.item.course_name" />
           </template>
+          <template v-slot:[`item.actions`]="data">
+            <div>
+              <app-btn
+                v-if="shouldShowButton(data.item.provider_name)"
+                color="info"
+                class="px-2 ml-1"
+                elevation="0"
+                min-width="0"
+                small
+                @click="lstZoom(data.item)"
+              >
+                <v-icon
+                  small
+                  v-text="'mdi-video-outline'"
+                />
+              </app-btn>
+            </div>
+          </template>
         </v-data-table>
       </v-card-text>
     </material-card>
@@ -351,6 +369,62 @@
         </v-card-text>
       </material-card>
     </v-dialog>
+    <!-- Listar las sesiones de zoom por curso  -->
+    <v-dialog
+      v-model="displayZoom"
+      persistent
+      max-width="1024"
+    >
+      <material-card
+        full-header
+        light
+        inline
+        color="info"
+        class="mx-auto"
+      >
+        <template #heading>
+          <div class="text-center pa-5">
+            <div class="text-h4 white--text">
+              Listado de Asistencia Zoom para <br> <span v-html="filterZoom.course" />
+            </div>
+          </div>
+        </template>
+        <v-card-text>
+          <v-data-table
+            :headers="headersZoom"
+            :items="assistants"
+            :search.sync="search"
+            multi-sort
+            must-sort
+          >
+            <template v-slot:no-data>
+              <v-alert
+                type="info"
+                color="info"
+                icon="mdi-alert"
+              >
+                Asistencia no Confirmada
+              </v-alert>
+            </template>
+          </v-data-table>
+          <div style="width: 100%; text-align: center; color: black;">
+            <strong>Nota</strong>: El presente informe solo corresponde a la asistencia del usuario en la sesión en vivo de Zoom
+          </div>
+          <div class="pa-3 text-center mt-2">
+            <v-btn
+              small
+              color="error"
+              min-width="100"
+              @click="displayZoom = false"
+            >
+              Cancelar
+            </v-btn>
+          </div>
+        </v-card-text>
+      </material-card>
+    </v-dialog>
+
+    <!-- -->
     <v-overlay
       class="v-overlay-custom"
       :value="overlay"
@@ -493,6 +567,13 @@
             text: 'Estatus del curso',
             value: 'status_name',
           },
+          {
+            sortable: false,
+            text: 'Ver',
+            value: 'actions',
+            width: '5%',
+            align: 'center',
+          },
         ],
         headersTeachList: [
           {
@@ -508,6 +589,20 @@
             value: 'qualification',
           },
         ],
+        headersZoom: [
+          {
+            text: 'Sesión',
+            value: 'nombre_sesion',
+          },
+          {
+            text: 'Duración',
+            value: 'duracion',
+          },
+          {
+            text: 'Tiempo en Línea',
+            value: 'tiempo_en_linea',
+          },
+        ],
         filter: {
           range: null,
           user_email: null,
@@ -518,6 +613,11 @@
           status_id: null,
           tipo: null,
         },
+        filterZoom: {
+          course_id: null,
+          email: null,
+          course: null,
+        },
         summary: {
           hours_aprove: 0,
           hours_teach: 0,
@@ -526,6 +626,7 @@
         },
         lstStatus: [],
         items: [],
+        assistants: [],
         displayDate: false,
         lstSpecialities: [],
         lstProvider: [],
@@ -571,6 +672,7 @@
         lstAreas: [],
         lstPositions: [],
         item: {},
+        displayZoom: false,
         displayDialogTeach: false,
         teach: [],
       };
@@ -620,11 +722,28 @@
       this.getAreas();
     },
     methods: {
+      shouldShowButton (origin) {
+        return origin === 'DTX';
+      },
+      lstZoom (filter) {
+        console.log(filter);
+        this.filterZoom.course_id = filter.course_id;
+        this.filterZoom.course = filter.course_name;
+        this.filterZoom.email = filter.user_email.toLowerCase();
+        this.parameterService.getZoomData(this.filterZoom).then(response => {
+          console.log(response.data);
+          this.assistants = response.data;
+          this.displayZoom = true;
+        }).catch((error) => {
+          console.log(error);
+          this.overlay = false;
+        });
+      },
       loadData () {
         this.overlay = true;
         this.filter.tipo = 2; // INFORME INDIVIDUAL
         this.courseService.getDashboardByFilter(this.filter).then(response => {
-          console.log('Load Data::::::::::::', response.data);
+          console.log('Datos::::::::::::', response.data);
           this.items = response.data.data;
           this.summary = response.data.summary;
           this.teach = response.data.teach;

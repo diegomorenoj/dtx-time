@@ -78,6 +78,12 @@ export default class ParameterService {
         });
     }
 
+    getZoomData (filterZoom) {
+        return axios.post(`${process.env.VUE_APP_RUTA_API}/zoom/`, filterZoom).then(res => {
+            return res.data;
+        });
+    }
+
     getLevelsByPosition (position) {
         return axios.get(`${process.env.VUE_APP_RUTA_API}/parameters/levels/position/${position}`).then(res => {
             return res.data;

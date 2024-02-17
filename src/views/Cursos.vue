@@ -234,6 +234,21 @@
           <template v-slot:[`item.actions`]="data">
             <div>
               <app-btn
+                v-if="shouldShowButton(data.item.origin)"
+                color="info"
+                class="px-2 ml-1"
+                elevation="0"
+                min-width="0"
+                small
+                @click="lstZoom(data.item)"
+              >
+                <v-icon
+                  small
+                  v-text="'mdi-video-outline'"
+                />
+              </app-btn>
+              <app-btn
+                v-if="!shouldShowButton(data.item.origin)"
                 color="info"
                 class="px-2 ml-1"
                 elevation="0"
@@ -248,6 +263,7 @@
                 />
               </app-btn>
               <app-btn
+                v-if="!shouldShowButton(data.item.origin)"
                 color="error"
                 class="px-2 ml-1"
                 elevation="0"
@@ -722,6 +738,67 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Listar las sesiones de zoom por curso  -->
+    <v-dialog
+      v-model="displayZoom"
+      persistent
+      max-width="1024"
+    >
+      <material-card
+        full-header
+        light
+        inline
+        color="info"
+        class="mx-auto"
+      >
+        <template #heading>
+          <div class="text-center pa-5">
+            <div class="text-h4 white--text">
+              Listado de Asistencia Zoom para <br> Resumen por curso <span v-html="filterZoom.course" />
+            </div>
+          </div>
+        </template>
+        <v-card-text>
+          <v-data-table
+            :headers="headersZoom"
+            :items="assistants"
+            :search.sync="search"
+            multi-sort
+            must-sort
+          />
+          <div class="pa-3 text-center mt-2">
+            <download-excel
+              class="ml-2 v-btn mr-5 v-btn--is-elevated v-btn--has-bg theme--light v-size--small success"
+              :data="assistants"
+              :fields="json_fields_zoom"
+              :header="`Listado de asistencia para ${filterZoom.course}`"
+              worksheet="CursosUsuario"
+              name="CursoUsuario.xls"
+            >
+              <v-icon
+                left
+                dark
+                small
+              >
+                mdi-file-excel
+              </v-icon>
+              Descargar
+            </download-excel>
+            <v-btn
+              small
+              color="error"
+              min-width="100"
+              @click="displayZoom = false"
+            >
+              Cancelar
+            </v-btn>
+          </div>
+        </v-card-text>
+      </material-card>
+    </v-dialog>
+
+    <!-- -->
   </v-container>
 </template>
 
@@ -743,6 +820,36 @@
       selectedFileType: 'Cursos',
       errors: '',
       message: '',
+      headersZoom: [
+        {
+          text: 'Sesión',
+          value: 'nombre_sesion',
+        },
+        {
+          text: 'Duración',
+          value: 'duracion',
+        },
+        {
+          text: 'Participante',
+          value: 'nombre_usuario',
+        },
+        {
+          text: 'Tiempo en Línea',
+          value: 'tiempo_en_linea',
+        },
+        {
+          text: 'Area',
+          value: 'area',
+        },
+        {
+          text: 'Cargo',
+          value: 'cargo',
+        },
+        {
+          text: 'Ciudad',
+          value: 'ciudad',
+        },
+      ],
       headers: [
         {
           text: 'ID del curso',
@@ -806,6 +913,17 @@
           value: 'area',
         },
       ],
+      json_fields_zoom: {
+        Fecha: 'fecha',
+        Sesion: 'nombre_sesion',
+        Duracion: 'duracion',
+        Participante: 'nombre_usuario',
+        Tiempo_en_linea: 'tiempo_en_linea',
+        Cargo: 'cargo',
+        Ciudad: 'ciudad',
+        Area: 'area',
+        Email: 'email',
+      },
       filter: {
         range: null,
         name: null,
@@ -813,12 +931,18 @@
         category: null,
         status_id: null,
       },
+      filterZoom: {
+        course_id: null,
+        email: null,
+        course: null,
+      },
       summary: {
         total_courses: '0',
         providers: [],
       },
       lstStatus: [],
       items: [],
+      assistants: [],
       item: {
         id: null,
         name: null,
@@ -834,6 +958,7 @@
         users: [],
       },
       file: null,
+      displayZoom: false,
       displayDate: false,
       display_start_date: false,
       display_end_date: false,
@@ -917,6 +1042,22 @@
       this.loadParameters();
     },
     methods: {
+      shouldShowButton (origin) {
+        return origin === 'moodle';
+      },
+      lstZoom (filter) {
+        console.log(filter);
+        this.filterZoom.course_id = filter.code;
+        this.filterZoom.course = filter.name;
+        this.parameterService.getZoomData(this.filterZoom).then(response => {
+          console.log(response.data);
+          this.assistants = response.data;
+          this.displayZoom = true;
+        }).catch((error) => {
+          console.log(error);
+          this.overlay = false;
+        });
+      },
       handleFileUpload () {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
