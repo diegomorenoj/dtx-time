@@ -12,6 +12,7 @@ use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\TrainingRequestController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ObjectiveController;
+use App\Http\Controllers\ZoomController;
 use App\Http\Controllers\ObjectiveSpecialtyController;
 use App\Http\Controllers\TrainingRequestsCommentsController;
 
@@ -49,6 +50,9 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::get('start', function () {
         return 'welcome';
     });
+
+    // Llamado a datos de zoom
+    Route::post('zoom', 'App\Http\Controllers\ZoomController@index');
 
     Route::get('users/user','App\Http\Controllers\UserController@getAuthenticatedUser');
     Route::post('users/logout','App\Http\Controllers\UserController@logout');
