@@ -52,7 +52,7 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     });
 
     // Llamado a datos de zoom
-    Route::post('zoom', 'App\Http\Controllers\ZoomController@index');
+    Route::post('zoom/getlist', 'App\Http\Controllers\ZoomController@index');
 
     Route::get('users/user','App\Http\Controllers\UserController@getAuthenticatedUser');
     Route::post('users/logout','App\Http\Controllers\UserController@logout');
