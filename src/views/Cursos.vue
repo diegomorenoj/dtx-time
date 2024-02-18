@@ -925,7 +925,7 @@
         Email: 'email',
       },
       filter: {
-        range: null,
+        range: ['2023-08-01', '2024-07-31'],
         name: null,
         specialty_id: null,
         category: null,
