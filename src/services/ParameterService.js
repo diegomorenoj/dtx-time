@@ -79,7 +79,7 @@ export default class ParameterService {
     }
 
     getZoomData (filterZoom) {
-        return axios.post(`${process.env.VUE_APP_RUTA_API}/zoom/`, filterZoom).then(res => {
+        return axios.post(`${process.env.VUE_APP_RUTA_API}/zoom/getlist`, filterZoom).then(res => {
             return res.data;
         });
     }

@@ -755,7 +755,7 @@
         <template #heading>
           <div class="text-center pa-5">
             <div class="text-h4 white--text">
-              Listado de Asistencia Zoom para <br> Resumen por curso <span v-html="filterZoom.course" />
+              Listado de Asistencia Zoom para <br><span v-html="filterZoom.course" />
             </div>
           </div>
         </template>
