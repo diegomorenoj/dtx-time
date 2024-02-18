@@ -12,7 +12,7 @@
           <span
             v-if="userInfo.rol_id == 4 || userInfo.rol_id == 5"
             style="font-weight: bold;"
-          >&nbsp;- Ciudad: {{ userInfo.city }} <br> {{ mesInicial }}  {{ filter.anio }}  /  {{ mesFinal }} {{ filter.anio + 1 }}  </span>
+          >&nbsp;- Ciudad: {{ userInfo.city }} <br> {{ mesInicial }}  {{ filter.anio }}  /  {{ mesFinal }} {{ +filter.anio + 1 }}  </span>
         </p>
       </v-col>
       <v-col
@@ -20,7 +20,7 @@
       >
         <v-select
           v-model="filter.anio"
-          :items="isMain"
+          :items="sortedIsMain"
           label="Seleccionar presupuesto"
           item-text="anio"
           item-value="anio"
@@ -83,7 +83,7 @@
             class="ml-2 v-btn mr-5 v-btn--is-elevated v-btn--has-bg theme--light v-size--small primary"
             :data="computedItems"
             :fields="json_fields"
-            :header="`Resumen ${mesInicial + ' ' + filter.anio}  /  ${mesFinal} ${filter.anio + 1} `"
+            :header="`Resumen ${mesInicial + ' ' + filter.anio}  /  ${mesFinal} ${+filter.anio + 1} `"
             :worksheet="`Presupuesto_${filter.anio}`"
             :name="`Presupuesto${filter.anio}.xls`"
           >
@@ -107,7 +107,7 @@
       icon="mdi-cash"
       icon-small
       color="error"
-      :title="`Resumen ${mesInicial + ' ' + filter.anio}  /  ${mesFinal} ${filter.anio + 1} `"
+      :title="`Resumen ${mesInicial + ' ' + filter.anio}  /  ${mesFinal} ${+filter.anio + 1} `"
       class="mb-6"
     >
       <v-card-text>
@@ -345,7 +345,7 @@
               small
               color="error"
               min-width="100"
-              @click="closeDialog()"
+              @click="closeDialogMain()"
             >
               Cancelar
             </v-btn>
@@ -354,7 +354,7 @@
               color="success"
               class="ml-2"
               min-width="100"
-              @click="store()"
+              @click="storeMain()"
             >
               {{ isEdit ? 'Editar' : 'Guardar' }}
             </v-btn>
@@ -545,6 +545,7 @@
             <div class="text-h4 white--text">
               Distribución <br>
               {{ mesInicial + ' ' + filter.anio }}  /  {{ mesFinal }} {{ filter.anio + 1 }}
+              <br> <strong> Por Distribuir: {{ formatPrice(selectedItem.to_assign) }} </strong>
             </div>
           </div>
         </template>
@@ -715,6 +716,9 @@
       searchAreas: null,
     }),
     computed: {
+      sortedIsMain () {
+        return this.isMain.slice().sort((a, b) => b.anio - a.anio);
+      },
       ...get('session', [
         'userInfo',
       ]),
@@ -839,6 +843,7 @@
           this.filter.anio = actualAnio;
         }
         this.overlay = true;
+        console.log('El errore estaá al cargar?');
         this.budgetService.getAllByAnio(this.filter).then(response => {
           this.items = this.filterDataByUserRole(response.data);
           // Calcular la suma aquí
@@ -876,6 +881,13 @@
         this.overlay = true;
         this.budgetService.getAllByAnio(this.filter).then(response => {
           this.items = response.data;
+          // Calcular la suma aquí
+          this.assigned = this.items.reduce((acc, item) => {
+            if (item.is_main === false || item.is_main === null) {
+              return acc + item.value;
+            }
+            return acc;
+          }, 0);
           this.overlay = false;
         }).catch((error) => {
           console.log(error);
@@ -949,12 +961,13 @@
         this.isEdit = false;
       },
       editData (item) {
+        console.log('Objeto :: ', item);
         this.overlay = true;
         this.isEdit = true;
+        this.isDistribution = true;
         this.item = Object.assign({}, item);
         this.overlay = false;
         this.budgetEditDistribution = true;
-        this.resetForm();
       },
       openConfirm (item) {
         this.item = Object.assign({}, item);
@@ -967,7 +980,7 @@
           this.getMainBudget();
         }
       },
-      store () {
+      storeMain () {
         if (this.$refs.form.validate()) {
           if (!this.isEdit) {
             const anioIngresado = parseInt(this.item.anio);
@@ -978,8 +991,9 @@
             }
             this.saveData();
           } else { this.updateData(); }
-          this.getMainBudget();
         }
+
+        this.getMainBudget();
       },
       storeBudgetAnio () {
 
@@ -993,21 +1007,40 @@
         this.overlay = true;
         const model = Object.assign({}, this.item);
         this.budgetService.store(this.item).then(response => {
-          console.log(response);
+          // Cargamos el presupuesto del nuevo año que fue creado
+
           this.overlay = false;
           this.item = {};
           this.displayDialog = false;
           this.budgetDistribution = false;
-          this.isDistribution = false;
           this.displayBudget = false;
-          this.loadData();
+
+          if (!this.isDistribution) {
+            this.filter.anio = response.data.anio;
+            this.assigned = 0;
+            this.selectedItem = {
+              id: response.data.id,
+              anio: response.data.anio,
+              value: response.data.value,
+              spent: 0,
+              city: null,
+              area: null,
+              executed_budget: response.data.value - 0,
+              to_assign: response.data.value - this.assigned,
+            };
+            this.items = [];
+          } else {
+            this.loadData();
+          }
+
+          this.isDistribution = false;
+
           this.snackbar = {
             display: true,
             title: 'INFO: ',
             type: 'success',
             message: 'Presupuesto Creado con Éxito!',
           };
-          this.resetForm();
         }).catch((error) => {
           this.overlay = false;
           this.item = model;
@@ -1062,7 +1095,10 @@
           this.budgetEditDistribution = false;
           this.displayDialog = false;
           this.displayBudget = false;
+          this.isDistribution = false;
+          this.isEdit = false;
           this.file = null;
+          this.item = {};
           this.loadData();
           this.snackbar = {
             display: true,
@@ -1120,8 +1156,18 @@
           };
         });
       },
+      closeDialogMain () {
+        this.$refs.form.reset();
+        this.item = {};
+        this.disabled = true;
+        this.displayDialog = false;
+        this.displayBudget = false;
+        this.overlay = false;
+        this.msgValidateYear = '';
+        this.loadData();
+      },
       closeDialog () {
-        this.resetForm();
+        this.$refs.frmDistribucion.reset();
         this.item = {};
         this.disabled = true;
         this.displayDialog = false;
