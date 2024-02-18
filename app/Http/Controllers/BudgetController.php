@@ -84,17 +84,33 @@ class BudgetController extends Controller
     public function store(Request $request)
     {
 
-        $input = $request->all();
-        log::info($input);
-        $budget = Budget::create($input);
+        try {
+            $input = $request->all();
+            log::info($input);
 
-        $response = [
-            'success' => true,
-            'data' => $budget,
-            'message' => "Success Created!"
-        ];
+            DB::beginTransaction();
 
-        return response()->json($response, 200);
+            $budget = Budget::create($input);
+
+            DB::commit();
+
+            $response = [
+                'success' => true,
+                'data' => $budget,
+                'message' => "Success Created!"
+            ];
+
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            DB::rollback($e->getMessage());
+            log::info($input);
+            $response = [
+                'success' => false,
+                'data' => $e->getMessage(),
+                'message' => 'Error al crear el presupuesto.'
+            ];
+            return response()->json($response, 404);
+        }
     }
 
     /**
