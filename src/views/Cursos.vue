@@ -834,6 +834,14 @@
           value: 'nombre_usuario',
         },
         {
+          text: 'Hora Entrada',
+          value: 'hora_entrada',
+        },
+        {
+          text: 'Hora Salida',
+          value: 'hora_salida',
+        },
+        {
           text: 'Tiempo en Línea',
           value: 'tiempo_en_linea',
         },
@@ -918,6 +926,8 @@
         Sesion: 'nombre_sesion',
         Duracion: 'duracion',
         Participante: 'nombre_usuario',
+        Entrada: 'hora_entrada',
+        Salida: 'hora_salida',
         Tiempo_en_linea: 'tiempo_en_linea',
         Cargo: 'cargo',
         Ciudad: 'ciudad',
