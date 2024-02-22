@@ -264,7 +264,7 @@
               <app-btn
                 v-if="shouldShowButton(data.item.provider_name)"
                 color="info"
-                class="px-2 ml-1"
+                class="px-1 ml-1"
                 elevation="0"
                 min-width="0"
                 small
@@ -277,7 +277,7 @@
               </app-btn>
               <app-btn
                 color="success"
-                class="px-2 ml-1"
+                class="px-1 ml-1"
                 elevation="0"
                 min-width="0"
                 small
@@ -583,9 +583,9 @@
           },
           {
             sortable: false,
-            text: 'Ver',
+            text: 'Opciones',
             value: 'actions',
-            width: '5%',
+            width: '15%',
             align: 'center',
           },
         ],
