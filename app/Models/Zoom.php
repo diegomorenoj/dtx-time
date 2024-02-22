@@ -12,6 +12,8 @@ class Zoom extends Model
 {
     // Campos que se pueden asignar masivamente
     protected $fillable = [
+        'hora_entrada',
+        'hora_salida',
         'fecha',
         'curso_id',
         'nombre_sesion',
@@ -40,31 +42,35 @@ class Zoom extends Model
 
             // Construcción de la consulta SQL con el condicional
             $query = "SELECT 
+                                MIN(FROM_UNIXTIME(zmp.join_time)) AS hora_entrada,
+                                MAX(FROM_UNIXTIME(zmp.leave_time)) AS hora_salida,
                                 date_format(FROM_UNIXTIME(zmd.start_time),'%d-%m-%Y') as fecha,
                                 z.course as curso_id,
                                 z.name as nombre_sesion,
                                 SEC_TO_TIME(zmd.duration*60) as duracion,
                                 zmp.name as nombre_usuario,
-                                zmp.user_email as email,
+                                u.email as email,
                                 SEC_TO_TIME(sum(zmp.duration)) as tiempo_en_linea
                         FROM mdl_zoom z
                         LEFT JOIN mdl_zoom_meeting_details zmd ON zmd.zoomid=z.id
                         LEFT JOIN mdl_zoom_meeting_participants zmp ON zmp.detailsid=zmd.id
+                        LEFT JOIN mdl_user u on u.id=zmp.userid
                         WHERE z.course = ".$course_id;
 
             if ($email) {
-                $query .= " AND zmp.user_email='".$email."'";
+                $query .= " AND u.email='".$email."'";
             }
 
-            $query .= " GROUP BY z.id, zmp.user_email, fecha, z.course, z.name, zmd.duration, zmp.name";
+            $query .= " GROUP BY z.id, u.email, fecha, z.course, z.name, zmd.duration, zmp.name";
 
             $zoom = DB::connection('mysql_aux')->select($query);
             
             $zoomEmails = collect($zoom)->pluck('email')->unique()->toArray();
+            Log::info($zoomEmails);
             // Cargamos solo los usuarios que necesitamos
             $users = User::whereIn('email', $zoomEmails)->get()->keyBy(function ($user) {
                 // Convertir los emails a minúsculas antes de indexar
-                return strtolower($user->email);
+                return $user->email;
             });
   
             // Mapear los resultados al modelo Zoom
