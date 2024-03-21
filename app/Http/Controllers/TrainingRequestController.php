@@ -785,6 +785,7 @@ class TrainingRequestController extends Controller
     private function notificationSendingRules(User $user, TrainingRequest $training)
     {
 
+        $creator_name = $user->lastname;
         $authorizedUsers = $this->getAuthorization();
 
         Log::info($authorizedUsers);
@@ -816,7 +817,7 @@ class TrainingRequestController extends Controller
         }
 
         $users = $users->concat($authorizedUsersGod);
-        $users = $users->concat(collect([$user]));
+        //$users = $users->concat(collect([$user]));
 
         Log::info($users);
 
@@ -830,7 +831,7 @@ class TrainingRequestController extends Controller
             $mailData["subject"] = "CAPACITACION EXTERNA - REVISIÓN";
             $mailData["mail"] = $user->email;
             $mailData["fecha_actual"] = $now;
-            $mailData["user_name"] = $user->user_name;
+            $mailData["user_name"] = $creator_name;
             $mailData["training_requests_name"] = $training->shortname;
             $mailData["training_requests_start_date"] = $training->start_date;
             $mailData["training_requests_end_date"] = $training->end_date;
@@ -1063,11 +1064,12 @@ class TrainingRequestController extends Controller
             $trainingRequest = TrainingRequest::find($id);
 
             $statusId = $input['status_id'];
+            $changeStatusUserId = $input['user_id'];
 
             // Tomar los usuarios asociados a la capacitación
 
             $users = TrainingRequestUser::where('training_request_id', $id)->get();
-
+            $usersChange = User::find($changeStatusUserId);
             // Unir userOwner y users en un solo array llamado userTraining
 
 
@@ -1319,7 +1321,7 @@ class TrainingRequestController extends Controller
             // ***************************************************************************************
 
 
-            $this->statusNotifyMail($trainingRequest, $oldStatus, $newStatus);
+            $this->statusNotifyMail($trainingRequest, $oldStatus, $newStatus, $usersChange);
             // ***************************************************************************************
             // FIN NOTIFICACIONES DE CAMBIO DE ESTADO DE UNA CAPACITACIÓN EXTERNA
             // ***************************************************************************************
@@ -1384,7 +1386,7 @@ class TrainingRequestController extends Controller
     }
 
 
-    private function statusNotifyMail($trainingRequest, $oldStatus, $newStatus)
+    private function statusNotifyMail($trainingRequest, $oldStatus, $newStatus, $usersChange)
     {
         try {
 
@@ -1440,14 +1442,14 @@ class TrainingRequestController extends Controller
             $now = date('d') . ' de ' . $month[date('m')] . ' de ' . date('Y');
 
             // RECORRER TODA LA LISTA DE USUARIOS Y ENVIAR EL EMAIL
-            $users->each(function ($u) use ($trainingRequest, $oldStatus, $newStatus, $now) {
+            $users->each(function ($u) use ($trainingRequest, $oldStatus, $newStatus, $now, $usersChange) {
 
                 // Preparar los datos para el template del email
                 $mailData = [
                     "subject" => "ACTUALIZACIÓN DE ESTADOS",
                     "mail" => $u->email,
                     "fecha_actual" => $now,
-                    "user_name" => $u->name,
+                    "user_name" => $usersChange->lastname,
                     "training_requests_name" => $trainingRequest->shortname,
                     "old_status" => $oldStatus->name,
                     "new_status" => $newStatus->name,
