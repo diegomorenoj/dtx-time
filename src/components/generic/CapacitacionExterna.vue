@@ -1283,7 +1283,7 @@
         this.overlay = true;
         this.confirm = false;
         const id = this.item.id;
-        this.trainingRequestService.changeStatus(id, this.item.status_id).then(response => {
+        this.trainingRequestService.changeStatus(id, this.item.status_id, this.userInfo.id).then(response => {
           this.overlay = false;
           this.loadData();
           this.snackbar = {

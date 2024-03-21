@@ -42,8 +42,8 @@ export default class TrainingRequestService {
         });
     }
 
-    changeStatus (id, statusId) {
-        const data = { status_id: statusId };
+    changeStatus (id, statusId, userId) {
+        const data = { status_id: statusId, user_id: userId };
         return axios.put(`${process.env.VUE_APP_RUTA_API}/trainings/changestatus/${id}`, data)
         .then(res => {
             return res.data;
