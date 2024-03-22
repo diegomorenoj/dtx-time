@@ -257,6 +257,8 @@ class ParameterController extends Controller
         $user = User::find($trainingRequest->user_id);
         $city_name = strtoupper($user->city);
 
+        Log::info($city_name);
+
         // VALIDAR LOS ESTADOS PREDECESORES A EN CURSO
         // 3: Pagadausers courses
         // 4: Autorizada
@@ -333,17 +335,21 @@ class ParameterController extends Controller
                     $states[] = 5;
                     $states[] = 8;
                 }
+                if ($trainingRequest->type == $this->free) $states[] = 4;
                 break;
 
             case 5: // 5	Socio
                 if ($trainingRequest->status_id != 11) {
                     $states[] = 0;
+                    log::info("Hola ");
+                    log::info($city_name. " " .$this->city_mx);
                     // CURSOS DE LA CIUDAD DE MEXICO
-                    if (str_contains($city_name, $this->city_mx)) {
+                    if (str_contains(mb_strtoupper($city_name), mb_strtoupper($this->city_mx))) {
                         $states[] = 5;
                         $states[] = 8;
                     }
                 }
+                if ($trainingRequest->type == $this->free) $states[] = 4;
                 break;
 
             case 6: // 6	Socio de capacitaciones
