@@ -819,7 +819,7 @@ class TrainingRequestController extends Controller
 
         $users = $users->concat($authorizedUsersGod);
 
-        if(($training->create_user_id!=$training->user_id)||($training->type=="G")) {
+        if(($training->create_user_id!=$training->user_id)||($training->group=="S")) {
             $creator_user = User::find($training->create_user_id);    
             $users = $users->concat(collect([$creator_user]));
         }        
