@@ -788,7 +788,8 @@ class TrainingRequestController extends Controller
         $creator_name = $user->lastname;
         $authorizedUsers = $this->getAuthorization();
 
-        Log::info($authorizedUsers);
+        Log::info("Información con secretaria");
+        Log::info($training);
 
         $authorizedUsersGod = $authorizedUsers->filter(function ($user) {
             return $user->rol_id == 3;
@@ -817,8 +818,13 @@ class TrainingRequestController extends Controller
         }
 
         $users = $users->concat($authorizedUsersGod);
-        //$users = $users->concat(collect([$user]));
 
+        if(($training->create_user_id!=$training->user_id)||($training->type=="G")) {
+            $creator_user = User::find($training->create_user_id);    
+            $users = $users->concat(collect([$creator_user]));
+        }        
+
+        Log::info("ciudad ");
         Log::info($users);
 
         // Creamos el correo de envio: 
