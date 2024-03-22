@@ -506,6 +506,7 @@
                 cols="3"
               >
                 <v-text-field
+                  v-if="userSelected"
                   v-model="userSelected.area"
                   class="mb-n3"
                   label="Área"
@@ -517,6 +518,7 @@
                 cols="3"
               >
                 <v-text-field
+                  v-if="userSelected"
                   v-model="userSelected.position"
                   class="mb-n3"
                   label="Cargo"
@@ -528,6 +530,7 @@
                 cols="1"
               >
                 <v-btn
+                  v-if="userSelected"
                   class="mb-n3 float-right"
                   min-width="0"
                   icon
@@ -1365,7 +1368,9 @@
           this.item.area = null;
           this.item.email = null;
           this.item.city = null;
+          this.userSelected = {};
         }
+        this.loadData();
       },
     },
 
