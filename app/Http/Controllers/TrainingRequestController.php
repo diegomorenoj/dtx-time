@@ -811,9 +811,6 @@ class TrainingRequestController extends Controller
                 ->when($user->city, function ($query) use ($user) {
                     return $query->where('city', $user->city);
                 })
-                ->when($user->area, function ($query) use ($user) {
-                    return $query->where('area', $user->area);
-                })
                 ->where('rol_id', 4);
         }
 
