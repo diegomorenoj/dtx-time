@@ -44,7 +44,7 @@
                 block
                 @click="sendForm()"
               >
-                Acceder
+                Ingresar
               </v-btn>
               <div
                 v-if="message"
