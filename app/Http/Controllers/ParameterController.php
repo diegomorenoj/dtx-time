@@ -356,22 +356,29 @@ class ParameterController extends Controller
 
                 if ($trainingRequest->status_id != 11) {
                     $states[] = 8;
-                    // CURSOS DE LA CIUDAD DE MEXICO
-                    if (str_contains($city_name, $this->city_mx)) {
-                        if ($trainingRequest->type == $this->free || ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 4; // SOLO SI ES GRATIS
+                    if ((str_contains(strtolower($city_name), strtolower($this->city_mx))
+                    ==true)) {
+                        if(($trainingRequest->status_id == 5)) {
+                            if ($trainingRequest->type == $this->free || ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 4; // SOLO SI ES GRATIS
+                        }
+                        
                     } else {
-                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2; // SOLO PAGAS MENORES O IGUALES AL LIMITE
-                        if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
+                        if(($trainingRequest->status_id == 5)) {
+                            if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2; // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                            if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
+                            if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 7; // SOLO PAGAS MENORES O IGUALES AL LIMITE
+                        }
                         if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6; // SOLO SI ES MAYOR AL LIMITE
-                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 7; // SOLO PAGAS MENORES O IGUALES AL LIMITE
-                    }
+                    }    
+
+
                 }
                 break;
 
             case 7: // 7	Socio Director
                 // CURSOS DE LA CIUDAD DE MEXICO
                 if ($trainingRequest->status_id != 11) {
-                    if (str_contains($city_name, $this->city_mx)) {
+                    if (str_contains(strtolower($city_name), strtolower($this->city_mx))==true) {
                         if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) {
                             $states[] = 4;
                             $states[] = 8;
