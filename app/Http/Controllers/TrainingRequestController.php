@@ -158,18 +158,19 @@ class TrainingRequestController extends Controller
              * 2	Usuario general
              * 3	Capacitaciones
              * 4	Encargado de oficina
-             * 5	Socio
+             * 5	Socio Division
              * 6	Socio de capacitaciones
              * 7	Socio Director
              * 8	Finanzas
              * 9	Secretaria
              * 10	Gerente
+             * 11	Socio
 
              * 
              */
 
             // VALIDAR EL USUARIO
-            if ($this->user->rol_id === 2) {
+            if ($this->user->rol_id === 2 || $this->user->rol_id === 11) {
                 $user_id = $this->user->id; // SOLO LO DE CADA UNO
                 $create_user_id = $this->user->id;
             } else { // AL 1: ADMIN Y AL ROL 3: CAPACITACIONES SE LE CARGAN TODAS
@@ -180,15 +181,23 @@ class TrainingRequestController extends Controller
                 }
             }
 
-            // VALIDAR LA CIUDAD
-            if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 10) // PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
+           
+
+            // El rol 4: VALIDAR LA CIUDAD
+            if ($this->user->rol_id == 4) // PARA EL ROL 4: Encargado de oficina, Cargar solo lo de su ciudad
             {
                 $city = $this->user->city;
             } else $city = $input['city'] === null ? '%%' : $input['city'];
 
+            if ($this->user->rol_id == 5 || $this->user->rol_id == 10) // Validacion de rol de socio y gerente
+            {
+                $city = $this->user->city;
+                $area = $this->user->area;
+            } 
+            
             // El rol 8: Finanzas Debe poder ver las type => P y las de el
             if ($this->user->rol_id === 8) {
-                $user_id = '%%'; // SOLO LO DE EL
+                $user_id = $this->user->id; // SOLO LO DE EL
                 $type = 'P';
             }
 
@@ -311,7 +320,13 @@ class TrainingRequestController extends Controller
                         ->whereRaw('UPPER(u.position) LIKE UPPER("' . $position . '")')
                         ->whereRaw('UPPER(u.city) LIKE UPPER("' . $city . '")')
                         ->whereRaw('t.status_id LIKE "' . $status_id . '"')
-                        ->whereRaw('t.type LIKE "' . $type . '"') // para ver las pagas
+                        ->where(function ($query) use ($user_id, $type) {
+                            $query->whereRaw('t.type LIKE "' . $type . '"')
+                                  ->orWhere(function ($query) use ($user_id) {
+                                      $query->where('t.type', 'G')
+                                            ->where('t.user_id', $user_id);
+                                  });
+                        })        
                         ->orderBy('t.created_at', 'desc')
                         ->get();
                 }
@@ -1428,7 +1443,7 @@ class TrainingRequestController extends Controller
                 case 5:
                 case 7:
                 case 8:
-                    $usersAutorization = $this->getUserNotify($userOwner, false, true, $trueDirector);
+                    $usersAutorization = $this->getUserNotify($userOwner, false, true, false);
                     break;
                 case 6:
                     $usersAutorization = $this->getUserNotify($userOwner, false, true, true);
