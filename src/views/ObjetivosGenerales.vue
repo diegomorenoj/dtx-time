@@ -138,7 +138,7 @@
           </v-col>
         </v-row>
         <v-row align="center">
-          <v-col v-if="userInfo.rol_id !== 4 && userInfo.rol_id !== 5">
+          <v-col v-if="userInfo.rol_id !== 4 && userInfo.rol_id !== 5 && userInfo.rol_id !== 11">
             <v-autocomplete
               v-model="filter.city"
               :items="lstCityFilter"
@@ -156,7 +156,7 @@
               @input="loadData()"
             />
           </v-col>
-          <v-col v-if="userInfo.rol_id !== 5">
+          <v-col v-if="userInfo.rol_id !== 5 && userInfo.rol_id !== 11">
             <v-autocomplete
               v-model="filter.area"
               :items="lstAreas"
@@ -1287,7 +1287,7 @@
         }
 
         // SI EL ROL ES 5
-        if (this.userInfo.rol_id === 5) {
+        if (this.userInfo.rol_id === 5 || this.userInfo.rol_id === 11) {
           this.filter.area = this.userInfo.area;
           this.filter.city = this.userInfo.city;
         }
