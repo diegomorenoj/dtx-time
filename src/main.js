@@ -37,7 +37,7 @@ axios.interceptors.response.use(
     return response;
   },
   error => {
-    console.log('Error::::::: leo', error.response?.data?.message);
+    // console.log('Error:::::', error.response?.data?.message);
     if (error.response?.status === 401 || (error.response?.status === 500 && error.response?.data?.message === 'Token has expired')) {
       store.commit('session/SET_TOKEN', undefined);
       store.commit('session/SET_LOGGED', false);

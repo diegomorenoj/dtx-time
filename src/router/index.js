@@ -3,6 +3,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import { trailingSlash } from '@/util/helpers';
 import { layout, route } from '@/util/routes';
+import store from '@/store';
 
 Vue.use(Router);
 
@@ -19,40 +20,6 @@ const router = new Router({
     layout('Default', [
       route('Informe Individual'),
       route('Informe Global', null, 'dashboard'),
-      /*
-      // Pages
-      route('Timeline', null, 'components/timeline'),
-      route('UserProfile', null, 'components/profile'),
-
-      // Components
-      route('Buttons', null, 'components/buttons'),
-      route('Grid', null, 'components/grid'),
-      route('Tabs', null, 'components/tabs'),
-      route('Notifications', null, 'components/notifications'),
-      route('Icons', null, 'components/icons'),
-      route('Typography', null, 'components/typography'),
-
-      // Forms
-      route('Regular Forms', null, 'forms/regular'),
-      route('Extended Forms', null, 'forms/extended'),
-      route('Validation Forms', null, 'forms/validation'),
-      route('Wizard', null, 'forms/wizard'),
-
-      // Tables
-      route('Regular Tables', null, 'tables/regular'),
-      route('Extended Tables', null, 'tables/extended'),
-      route('Data Tables', null, 'tables/data-tables'),
-
-      // Maps
-      route('Google Maps', null, 'maps/google'),
-      route('Fullscreen Map', null, 'maps/fullscreen'),
-
-      route('Rtl', null, 'pages/rtl'),
-      route('Widgets', null, 'widgets'),
-      route('Charts', null, 'charts'),
-      route('Calendar', null, 'calendar'),
-      */
-
       // USUARIOS
       route('Usuarios', null, 'config/users'),
       // CAPACIOTACIONES EXTERNAS
@@ -82,7 +49,14 @@ const router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-  return to.path.endsWith('/') ? next() : next(trailingSlash(to.path));
-});
+  // Verifica si el usuario está autenticado utilizando localStorage
+  const isLogged = localStorage.getItem('session@logged') === 'true';
 
+  // Si el usuario no está autenticado y la ruta a la que intenta acceder no es la página de inicio de sesión, redirige a la página de inicio de sesión
+  if (!isLogged && to.path !== '/login') {
+    next('/login');
+  } else {
+    next();
+  }
+});
 export default router;
