@@ -503,7 +503,7 @@ class UserController extends Controller
                 $permits->MENU = $menu;
                 break;
         
-            case 5: // 5	Socio
+            case 5: // 5	Socio de Division
                 $permits->VIEW_TRAINING = true;
                 $permits->CREATE_TRAINING = true;
                 $permits->CREATE_TRAINING_TERCERO = false;
@@ -550,6 +550,57 @@ class UserController extends Controller
                 $menu[] = 'MENU_HOME';
                 $menu[] = 'MENU_TRAININGS';
                 $menu[] = 'MENU_BUDGET';
+                $menu[] = 'GENERAL_REPORT';
+                $menu[] = 'INDIVIDUAL_REPORT';
+                $permits->MENU = $menu;
+                break;
+
+            case 11: // 11	Socio
+                $permits->VIEW_TRAINING = true;
+                $permits->CREATE_TRAINING = true;
+                $permits->CREATE_TRAINING_TERCERO = false;
+                $permits->UPDATE_TRAINING = false;
+                $permits->DELETE_TRAINING = false;
+                $permits->MANAGE_COMMENTS = true;
+                $permits->MANAGE_RECORDS = true;
+                $permits->DELETE_RECORDS = false;
+                $permits->VIEW_PAST_REQUESTS = true;
+                $permits->VIEW_HISTORY = true;
+                $permits->CHANGE_STATUS_TRAINING = false;// Cambiar el estado del curso
+                // GRILLA Y FILTROS DE CAPACITACIONES EXTERNAS
+                $permits->SEARCH_USERS_TRAINING = false;
+                $permits->SEARCH_COURSES_TRAINING = false;
+                $permits->SEARCH_GROUPS_TRAINING = false;
+                $permits->SEARCH_AREAS_TRAINING = false;
+                $permits->SEARCH_POSITIONS_TRAINING = false;
+                $permits->SEARCH_CITIES_TRAINING = false;
+                $permits->FEE_AVAILABLE_TRAINING = false;
+                $permits->FEE_SPEND_TRAINING = false;
+                $permits->APPROVED_TRAINING = false;
+                // FILTROS INFORME GLOBAL
+                $permits->SEARCH_GLOBAL_AREA = false;
+                $permits->SEARCH_GLOBAL_POSITION = false;
+                $permits->SEARCH_GLOBAL_CITY = false;
+                // PARA CURSOS
+                $permits->CREATE_COURSES = false;
+                $permits->IMPORT_COURSES = false;
+                $permits->IMPORT_USERS_COURSES = false;
+                $permits->UPDATE_COURSES = false;
+                $permits->DELETE_COURSES = false;
+                // PARA OBJETIVOS
+                $permits->CREATE_OBJETIVES = false;
+                $permits->UPDATE_OBJETIVES = false;
+                $permits->DELETE_OBJETIVES = false;
+                // PARA PRESUPUESTOS
+                $permits->CREATE_BUDGETS = false;
+                $permits->UPDATE_BUDGETS = false;
+                $permits->DELETE_BUDGETS = false;
+                $permits->DISTRIBUTE_BUDGETS = false;
+                $permits->READ_DISTRIBUTE_BUDGETS = true;
+                // PERMISOS PARA EL MENÚ
+                $menu = array();
+                $menu[] = 'MENU_HOME';
+                $menu[] = 'MENU_TRAININGS';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
                 $permits->MENU = $menu;

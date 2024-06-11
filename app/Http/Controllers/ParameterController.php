@@ -336,6 +336,13 @@ class ParameterController extends Controller
                     $states[] = 8;
                 }
                 if ($trainingRequest->type == $this->free) $states[] = 4;
+                // SI NO SE CUMPLE LA CONDICION ANTERIOR, VALIDAMOS QUE PUEDA GESTIONAR SUS PROPIAS CAPACITACIONES SEGUN REGLAS DEL FLUJO
+                if ($trainingRequest->user_id == $this->user->id) {
+                    if ($trainingRequest->status_id == 3 || $trainingRequest->status_id == 4) {
+                        $states[] = 9;
+                        $states[] = 10;
+                    }
+                }
                 break;
 
             case 5: // 5	Socio
@@ -350,51 +357,86 @@ class ParameterController extends Controller
                     }
                 }
                 if ($trainingRequest->type == $this->free) $states[] = 4;
+                // SI NO SE CUMPLE LA CONDICION ANTERIOR, VALIDAMOS QUE PUEDA GESTIONAR SUS PROPIAS CAPACITACIONES SEGUN REGLAS DEL FLUJO
+                if ($trainingRequest->user_id == $this->user->id) {
+                    if ($trainingRequest->status_id == 3 || $trainingRequest->status_id == 4) {
+                        $states[] = 9;
+                        $states[] = 10;
+                    }
+                }
                 break;
 
             case 6: // 6	Socio de capacitaciones
 
                 if ($trainingRequest->status_id != 11) {
-                    $states[] = 8;
                     if ((str_contains(strtolower($city_name), strtolower($this->city_mx))
                     ==true)) {
                         if(($trainingRequest->status_id == 5)) {
-                            if ($trainingRequest->type == $this->free || ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 4; // SOLO SI ES GRATIS
+                            $states[] = 8;
+                            if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
+                            if (($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit)) $states[] = 2;
                         }
                         
                     } else {
                         if(($trainingRequest->status_id == 5)) {
+                            $states[] = 8;
                             if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 2; // SOLO PAGAS MENORES O IGUALES AL LIMITE
                             if ($trainingRequest->type == $this->free) $states[] = 4; // SOLO SI ES GRATIS
                             if ($trainingRequest->type == $this->payment && $trainingRequest->fee <= $this->fee_limit) $states[] = 7; // SOLO PAGAS MENORES O IGUALES AL LIMITE
-                        }
-                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 6; // SOLO SI ES MAYOR AL LIMITE
-                    }    
+
+                        }                        
+                    }   
+                    if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit && $trainingRequest->status_id == 5) $states[] = 6; // SOLO SI ES MAYOR AL LIMITE 
 
 
+                }
+                // SI NO SE CUMPLE LA CONDICION ANTERIOR, VALIDAMOS QUE PUEDA GESTIONAR SUS PROPIAS CAPACITACIONES SEGUN REGLAS DEL FLUJO
+                if ($trainingRequest->user_id == $this->user->id) {
+                    if ($trainingRequest->status_id == 3 || $trainingRequest->status_id == 4) {
+                        $states[] = 9;
+                        $states[] = 10;
+                    }
                 }
                 break;
 
             case 7: // 7	Socio Director
-                // CURSOS DE LA CIUDAD DE MEXICO
-                if ($trainingRequest->status_id != 11) {
+                // CURSOS DE LA CIUDAD DE MEXICO if(($trainingRequest->status_id == 5))
+                if ($trainingRequest->status_id != 11 && $trainingRequest->status_id == 6) {
+                    
                     if (str_contains(strtolower($city_name), strtolower($this->city_mx))==true) {
+
                         if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) {
-                            $states[] = 4;
-                            $states[] = 8;
+                                $states[] = 2;
+                                $states[] = 8;                          
+                        
                         }
+
                     } else {
                         if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 2;
-                        if ($trainingRequest->type == $this->payment && $trainingRequest->fee > $this->fee_limit) $states[] = 7; // SOLO PAGAS MAYOR AL LIMITE
                         $states[] = 8;
                     }
                 }
                 break;
 
             case 8: // 8	Finanzas
-                $states[] = 3;
+                if ($trainingRequest->status_id == 2) $states[] = 3;
+                // SI NO SE CUMPLE LA CONDICION ANTERIOR, VALIDAMOS QUE PUEDA GESTIONAR SUS PROPIAS CAPACITACIONES SEGUN REGLAS DEL FLUJO
+                if ($trainingRequest->user_id == $this->user->id) {
+                    if ($trainingRequest->status_id == 3 || $trainingRequest->status_id == 4) {
+                        $states[] = 9;
+                        $states[] = 10;
+                    }
+                }   
+                // SI NO SE CUMPLE LA CONDICION ANTERIOR, VALIDAMOS QUE PUEDA GESTIONAR SUS PROPIAS CAPACITACIONES SEGUN REGLAS DEL FLUJO
+                if ($trainingRequest->user_id == $this->user->id) {
+                    if ($trainingRequest->status_id == 3 || $trainingRequest->status_id == 4) {
+                        $states[] = 9;
+                        $states[] = 10;
+                    }
+                }
                 break;
-        }
+                
+        }    
 
         // ESTADO DE LA CAPACITACIÓN EXTERNA
         $states[] = $trainingRequest->status_id;

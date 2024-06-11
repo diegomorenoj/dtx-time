@@ -587,8 +587,8 @@ class CourseController extends Controller
             }
 
             // VALIDAR LA CIUDAD
-            // PARA EL ROL 4: Encargado de oficina y ROL 5: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
-            if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 10) {
+            // PARA EL ROL 4: Encargado de oficina y  ROL 5: Socio Division, ROL 11: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
+            if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 11 || $this->user->rol_id == 10) {
                 $city = $this->user->city;
                 $area = $this->user->area;
             } else {
@@ -852,8 +852,8 @@ class CourseController extends Controller
         }
 
         // VALIDAR LA CIUDAD
-        // PARA EL ROL 4: Encargado de oficina y ROL 5: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
-        if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 10) {
+        // PARA EL ROL 4: Encargado de oficina y ROL 5: Socio Division, ROL 11: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
+        if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 11 || $this->user->rol_id == 10 ) {
             $city = $this->user->city;
             $area = $this->user->area;
         } else {
