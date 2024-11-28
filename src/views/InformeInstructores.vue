@@ -262,7 +262,7 @@
           },
         ],
         filter: {
-          range: null,
+          range: ['2024-08-01', '2025-05-31'],
           user_email: null,
           name: null,
         },
