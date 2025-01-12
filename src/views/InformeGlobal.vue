@@ -620,7 +620,7 @@
           },
         ],
         filter: {
-          range: ['2024-08-01', '2025-05-31'],
+          range: ['2024-08-01', '2024-09-29'],
           user_email: null,
           name: null,
           area: null,
