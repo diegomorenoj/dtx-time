@@ -8,6 +8,13 @@ const state = {
   mini: false,
   items: [
     {
+      title: 'MANUAL',
+      icon: 'mdi-book',
+      href: 'https://google.com',
+      permit: 'INDIVIDUAL_REPORT',
+      external: true,
+    },
+    {
       title: 'Informe Individual',
       icon: 'mdi-book-open',
       to: '/',
