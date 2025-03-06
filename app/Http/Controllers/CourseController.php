@@ -570,7 +570,6 @@ class CourseController extends Controller
     {
 
         try {
-
             $input = $request->all();
             $range = $input['range'] === null ? '%%' : $input['range'];
             $name = $input['name'] === null ? '%%' : '%%' . $input['name'] . '%%';
@@ -587,17 +586,22 @@ class CourseController extends Controller
             }
 
             // VALIDAR LA CIUDAD
-            // PARA EL ROL 4: Encargado de oficina y  ROL 5: Socio Division, ROL 11: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
-            if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 11 || $this->user->rol_id == 10) {
+            // PARA EL ROL: Socio Division, ROL 11: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
+            if ($this->user->rol_id == 5 || $this->user->rol_id == 11 || $this->user->rol_id == 10) {
                 $city = $this->user->city;
                 $area = $this->user->area;
-            } else {
+            }
+            // PARA EL ROL 4: Encargado de oficina
+            elseif ($this->user->rol_id == 4) {
+                $city = $this->user->city;
+                $area = $input['area'] === null ? '%%' : $input['area'];
+            }
+            else {
                 $city = $input['city'] === null ? '%%' : $input['city'];
                 $area = $input['area'] === null ? '%%' : $input['area'];
             }
 
             if ($input['range'] !== null) {
-                log::info($input['range']);
                 $courses = DB::table('courses AS c')
                     ->join('user_courses AS uc', 'uc.course_id', '=', 'c.id')
                     ->join('users AS u', 'u.id', '=', 'uc.user_id')
@@ -725,7 +729,6 @@ class CourseController extends Controller
             $courses_moodle = $this->getDashboardByFilterMoodle($input);
             $merged = $courses->merge($courses_moodle);
             $results = $merged->all();
-
             if ($courses_teach != null) {
                 // CURSOS DE MOODLE TEACH
                 $courses_teach_moodle = $this->getCourseTeachMoodle($user_email, $input['range']);
@@ -737,7 +740,6 @@ class CourseController extends Controller
                     $hours_teach += $item->hours;
                 }
             }
-
             // CONTAR LA CANTIDAD DE HORAS DE CURSOS FINALIZADOS
             $hours_aprove = 0;
             $hours_total = 0;
@@ -745,7 +747,6 @@ class CourseController extends Controller
                 if ($item->status_id == 13) $hours_aprove += $item->hours;
                 $hours_total += $item->hours;
             }
-
             // IDS CURSOS
             // $lstID = array();
             $lstID[] = 0;
@@ -852,11 +853,17 @@ class CourseController extends Controller
         }
 
         // VALIDAR LA CIUDAD
-        // PARA EL ROL 4: Encargado de oficina y ROL 5: Socio Division, ROL 11: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
-        if ($this->user->rol_id == 4 || $this->user->rol_id == 5 || $this->user->rol_id == 11 || $this->user->rol_id == 10 ) {
+        // PARA EL ROL 5: Socio Division, ROL 11: Socio, Cargar solo lo de su ciudad, ROL 10: Gerente
+        if ($this->user->rol_id == 5 || $this->user->rol_id == 11 || $this->user->rol_id == 10 ) {
             $city = $this->user->city;
             $area = $this->user->area;
-        } else {
+        } 
+        // PARA EL ROL 4: Encargado de oficina
+        elseif ($this->user->rol_id == 4) {
+            $city = $this->user->city;
+            $area = $input['area'] === null ? '%%' : $input['area'];
+        }
+        else {
             $city = $input['city'] === null ? '%%' : $input['city'];
             $area = $input['area'] === null ? '%%' : $input['area'];
         }
@@ -893,8 +900,8 @@ class CourseController extends Controller
                         , ug.area
                         , u.city
                         , ug.position
-                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%d/%m/%Y') AS date
-                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.enddate)),'%d/%m/%Y') AS end_date
+                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.startdate)),'%Y/%m/%d') AS date
+                        , DATE_FORMAT(DATE(FROM_UNIXTIME(c.enddate)),'%Y/%m/%d') AS end_date
                         , concat('<a target=\"_new\" href=\"https://dtx.grantthornton.mx/course/view.php?id=', c.id, '\">', c.fullname, '</a>') AS course_name
                         , ((SELECT count(completionstate) FROM mdl_course_modules_completion where userid=u.id and completionstate<>0 and coursemoduleid in (select id from mdl_course_modules where course=c.id and completion>1)) / (select count(id) from mdl_course_modules where course=c.id and completion>1))*100 AS progress 
                         , (select gg.finalgrade from mdl_grade_grades gg left join mdl_grade_items gi on gi.id = gg.itemid where gg.userid = u.id and gi.courseid=c.id and gi.itemtype = 'course') AS qualification
@@ -915,7 +922,7 @@ class CourseController extends Controller
                     LEFT JOIN " . $bd_local . ".rols ru ON ru.id = ug.rol_id
                 ) cur
                 WHERE 
-                    DATE_FORMAT(cur.created_at,'%Y-%m-%d') BETWEEN ? AND ?
+                    DATE_FORMAT(cur.date,'%Y-%m-%d') BETWEEN ? AND ?
                     AND UPPER(cur.course_name)  LIKE UPPER(?)
                     AND cur.user_email LIKE ?
                     AND cur.city LIKE ?
