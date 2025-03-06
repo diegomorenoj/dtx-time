@@ -10,9 +10,9 @@ const state = {
     {
       title: 'MANUAL',
       icon: 'mdi-book',
-      href: 'https://google.com',
+      href: '/pdf/manual_dtx.pdf',
       permit: 'INDIVIDUAL_REPORT',
-      external: true,
+      external: false,
     },
     {
       title: 'Informe Individual',
