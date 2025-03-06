@@ -338,6 +338,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_PROVIDERS';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
 
                 break;
@@ -448,6 +449,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_PROVIDERS';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
                 break;
         
@@ -500,6 +502,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_BUDGET';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
                 break;
         
@@ -552,6 +555,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_BUDGET';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
                 break;
 
@@ -603,6 +607,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_TRAININGS';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
                 break;
         
@@ -659,6 +664,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_BUDGET';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
                 break;
         
@@ -711,6 +717,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_BUDGET';
                 $menu[] = 'GENERAL_REPORT';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
                 break;
         
@@ -762,6 +769,7 @@ class UserController extends Controller
                 $menu[] = 'MENU_HOME';
                 $menu[] = 'MENU_TRAININGS';
                 $menu[] = 'INDIVIDUAL_REPORT';
+                $menu[] = 'APPROVAL_MANUAL';
                 $permits->MENU = $menu;
                 break;
 
