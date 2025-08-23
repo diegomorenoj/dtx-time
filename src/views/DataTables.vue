@@ -132,5 +132,5 @@
       ],
       search: undefined,
     }),
-  }
+  };
 </script>

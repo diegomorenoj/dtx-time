@@ -297,11 +297,11 @@
 
     methods: {
       zoomIn () {
-        this.zoom = (this.zoom + 10) || 100
+        this.zoom = (this.zoom + 10) || 100;
       },
       zoomOut () {
-        this.zoom = (this.zoom - 10) || 0
+        this.zoom = (this.zoom - 10) || 0;
       },
     },
-  }
+  };
 </script>

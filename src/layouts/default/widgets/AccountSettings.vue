@@ -12,7 +12,7 @@
     components: {
       DefaultList: () => import(
         /* webpackChunkName: "default-list" */
-        '../List'
+        '../List',
       ),
     },
 
@@ -35,5 +35,5 @@
         },
       ],
     }),
-  }
+  };
 </script>

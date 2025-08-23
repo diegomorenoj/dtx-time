@@ -320,23 +320,23 @@
 
     computed: {
       stringAccount () {
-        return this.account.join(',')
+        return this.account.join(',');
       },
       scope () {
-        if (this.tab === 0) return 'about'
-        else if (this.tab === 2) return 'address'
-        return 'account'
+        if (this.tab === 0) return 'about';
+        else if (this.tab === 2) return 'address';
+        return 'account';
       },
       availableSteps () {
-        const steps = [0]
+        const steps = [0];
 
         if (
           this.first &&
           this.last &&
           this.email
-        ) steps.push(1)
+        ) steps.push(1);
 
-        if (this.stringAccount && steps.includes(1)) steps.push(2)
+        if (this.stringAccount && steps.includes(1)) steps.push(2);
 
         if (
           this.address &&
@@ -344,31 +344,31 @@
           this.city &&
           this.state &&
           steps.includes(2)
-        ) steps.push(3)
+        ) steps.push(3);
 
-        return steps
+        return steps;
       },
     },
 
     methods: {
       next (valid) {
-        if (!valid) return
+        if (!valid) return;
 
         if (this.tab === this.tabs.length - 1) {
-          alert('Form finished')
+          alert('Form finished');
         } else {
-          this.tab++
+          this.tab++;
         }
       },
       onChange (val) {
-        const value = val.target.files[0]
+        const value = val.target.files[0];
 
-        if (!value) return (this.image = null)
+        if (!value) return (this.image = null);
 
-        this.image = URL.createObjectURL(value)
+        this.image = URL.createObjectURL(value);
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

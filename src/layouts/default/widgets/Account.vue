@@ -55,5 +55,5 @@
         { title: 'Log out' },
       ],
     }),
-  }
+  };
 </script>

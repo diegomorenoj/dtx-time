@@ -21,7 +21,7 @@ module.exports = {
     indent: 'off',
     //
     'no-unused-vars': 'warn',
-    "semi": [1, "always"]
+    semi: [1, 'always'],
   },
 
   overrides: [
@@ -35,4 +35,4 @@ module.exports = {
       },
     },
   ],
-}
+};

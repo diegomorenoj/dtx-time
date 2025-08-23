@@ -1,5 +1,5 @@
 <script>
-  import { VHover, VListItem } from 'vuetify/lib'
+  import { VHover, VListItem } from 'vuetify/lib';
 
   export default {
     name: 'AppBarItem',
@@ -20,10 +20,10 @@
                 link: true,
                 ...this.$attrs,
               },
-            }, this.$slots.default)
+            }, this.$slots.default);
           },
         },
-      })
+      });
     },
-  }
+  };
 </script>

@@ -191,5 +191,5 @@
 <script>
   export default {
     name: 'RegularTablesView',
-  }
+  };
 </script>

@@ -61,7 +61,7 @@
 
 <script>
   // Components
-  import AppBtn from '@/components/app/Btn'
+  import AppBtn from '@/components/app/Btn';
 
   export default {
     name: 'CalendarView',
@@ -79,7 +79,7 @@
               elevation: 0,
               rounded: true,
             },
-          }, this.$slots.default)
+          }, this.$slots.default);
         },
       },
     },
@@ -123,7 +123,7 @@
         'day',
       ],
     }),
-  }
+  };
 </script>
 
 <style lang="sass">

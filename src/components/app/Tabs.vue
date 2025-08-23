@@ -24,7 +24,7 @@
         default: 'primary',
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

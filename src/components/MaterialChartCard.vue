@@ -63,7 +63,7 @@
         validator: v => ['Bar', 'Line', 'Pie'].includes(v),
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

@@ -58,5 +58,5 @@
         'Another one',
       ],
     }),
-  }
+  };
 </script>

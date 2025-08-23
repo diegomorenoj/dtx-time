@@ -1,5 +1,5 @@
 // Pathify
-import { make } from 'vuex-pathify'
+import { make } from 'vuex-pathify';
 
 const state = {
   sales: [
@@ -34,13 +34,13 @@ const state = {
       salesInM: 550,
     },
   ],
-}
+};
 
-const mutations = make.mutations(state)
+const mutations = make.mutations(state);
 
-const actions = {}
+const actions = {};
 
-const getters = {}
+const getters = {};
 
 export default {
   namespaced: true,
@@ -48,4 +48,4 @@ export default {
   mutations,
   actions,
   getters,
-}
+};

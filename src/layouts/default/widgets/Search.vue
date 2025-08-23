@@ -27,5 +27,5 @@
 <script>
   export default {
     name: 'DefaultSearch',
-  }
+  };
 </script>

@@ -33,5 +33,5 @@
       heading: String,
       link: String,
     },
-  }
+  };
 </script>

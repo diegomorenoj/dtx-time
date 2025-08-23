@@ -9,5 +9,5 @@
     name: 'PageLayout',
 
     components: { PageView: () => import('./View') },
-  }
+  };
 </script>
