@@ -360,8 +360,8 @@
 
     methods: {
       validateForm (scope) {
-        alert('Form Submitted!')
+        alert('Form Submitted!');
       },
     },
-  }
+  };
 </script>

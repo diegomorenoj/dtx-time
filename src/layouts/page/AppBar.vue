@@ -40,7 +40,7 @@
 
 <script>
   // Utilities
-  import { get } from 'vuex-pathify'
+  import { get } from 'vuex-pathify';
 
   export default {
     name: 'PageAppBar',
@@ -76,5 +76,5 @@
     }),
 
     computed: { name: get('route/name') },
-  }
+  };
 </script>

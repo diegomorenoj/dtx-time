@@ -58,7 +58,7 @@
     },
 
     data: () => ({ hover: false }),
-  }
+  };
 </script>
 
 <style lang="sass">

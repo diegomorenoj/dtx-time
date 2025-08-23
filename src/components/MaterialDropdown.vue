@@ -62,5 +62,5 @@
     },
 
     data: () => ({ menu: false }),
-  }
+  };
 </script>

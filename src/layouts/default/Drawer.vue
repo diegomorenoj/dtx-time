@@ -21,7 +21,7 @@
       />
     </template>
 
-    <div class="px-2">
+    <div class="px-1">
       <default-drawer-header />
 
       <v-divider class="mx-3 mb-2" />

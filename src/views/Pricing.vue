@@ -76,7 +76,7 @@
         },
       ],
     }),
-  }
+  };
 </script>
 
 <style lang="sass">

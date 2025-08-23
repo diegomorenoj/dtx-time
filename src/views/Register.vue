@@ -175,7 +175,7 @@
 
       ],
     }),
-  }
+  };
 </script>
 
 <style lang="sass">

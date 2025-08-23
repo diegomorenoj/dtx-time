@@ -16,6 +16,22 @@
         cols="6"
       >
         <div class="pb-2 text-right">
+          <a
+            :href="'/pdf/manual_dtx.pdf'"
+            target="_blank"
+          >
+            <v-btn
+              small
+              color="warning"
+              min-width="100"
+              class="mr-2"
+            >
+              <v-icon left>
+                mdi-book
+              </v-icon>
+              ¿Cómo usar este informe?
+            </v-btn>
+          </a>
           <download-excel
             class="ml-2 v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--small primary"
             :data="items"

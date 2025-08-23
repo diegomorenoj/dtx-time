@@ -39,22 +39,22 @@
     data () {
       return {
         internalValue: this.value,
-      }
+      };
     },
 
     watch: {
       internalValue (val, oldVal) {
-        if (val === oldVal) return
+        if (val === oldVal) return;
 
-        this.$emit('input', val)
+        this.$emit('input', val);
       },
       value (val, oldVal) {
-        if (val === oldVal) return
+        if (val === oldVal) return;
 
-        this.internalValue = val
+        this.internalValue = val;
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

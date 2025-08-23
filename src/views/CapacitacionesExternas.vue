@@ -6,7 +6,7 @@
   >
     <v-row align="center">
       <v-col
-        cols="4"
+        cols="2"
       >
         <p class="mb-0 d-inline-block text-h4">
           Capacitaciones Externas
@@ -14,6 +14,22 @@
       </v-col>
       <v-col>
         <div class="pb-2 text-right">
+          <a
+            :href="'/pdf/maual_cap_ext.pdf'"
+            target="_blank"
+          >
+            <v-btn
+              small
+              color="warning"
+              min-width="100"
+              class="mr-2"
+            >
+              <v-icon left>
+                mdi-book
+              </v-icon>
+              ¿Cómo hacer una solicitud?
+            </v-btn>
+          </a>
           <v-btn
             v-if="userInfo.permits.CREATE_TRAINING_TERCERO"
             small
@@ -62,7 +78,7 @@
     <material-card
       icon="mdi-filter"
       icon-small
-      color="orange"
+      color="error"
       title="Filtros de informe"
       class="mb-6"
     >
@@ -272,7 +288,7 @@
     <material-card
       icon="mdi-account"
       icon-small
-      color="orange"
+      color="error"
       title="Resumen de solicitudes"
     >
       <v-card-text>

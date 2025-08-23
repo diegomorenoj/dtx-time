@@ -231,5 +231,5 @@
 <script>
   export default {
     name: 'GridView',
-  }
+  };
 </script>

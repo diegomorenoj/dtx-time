@@ -24,7 +24,7 @@
     name: 'MaterialStatCard',
 
     props: { value: String },
-  }
+  };
 </script>
 
 <style lang="sass">

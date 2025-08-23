@@ -250,10 +250,10 @@
 
 <script>
   // Mixins
-  import Proxyable from 'vuetify/lib/mixins/proxyable'
+  import Proxyable from 'vuetify/lib/mixins/proxyable';
 
   // Vuex
-  import { get, sync } from 'vuex-pathify'
+  import { get, sync } from 'vuex-pathify';
 
   export default {
     name: 'DashboardCoreSettings',
@@ -292,10 +292,10 @@
 
     watch: {
       color (val) {
-        this.$vuetify.theme.themes[this.isDark ? 'dark' : 'light'].primary = val
+        this.$vuetify.theme.themes[this.isDark ? 'dark' : 'light'].primary = val;
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

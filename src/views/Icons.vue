@@ -298,5 +298,5 @@
         'mdi-badminton',
       ],
     }),
-  }
+  };
 </script>

@@ -69,7 +69,7 @@
 
 <script>
   // Mixins
-  import Proxyable from 'vuetify/lib/mixins/proxyable'
+  import Proxyable from 'vuetify/lib/mixins/proxyable';
 
   export default {
     name: 'MaterialWizard',
@@ -86,7 +86,7 @@
         default: () => ([]),
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

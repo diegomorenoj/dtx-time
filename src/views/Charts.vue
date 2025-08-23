@@ -262,7 +262,7 @@
               seriesBarDistance: 5,
               axisX: {
                 labelInterpolationFnc: function (value) {
-                  return value[0]
+                  return value[0];
                 },
               },
             }],
@@ -296,7 +296,7 @@
               seriesBarDistance: 5,
               axisX: {
                 labelInterpolationFnc: function (value) {
-                  return value[0]
+                  return value[0];
                 },
               },
             }],
@@ -403,14 +403,14 @@
           1: false,
           2: false,
         },
-      }
+      };
     },
     methods: {
       complete (index) {
-        this.list[index] = !this.list[index]
+        this.list[index] = !this.list[index];
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

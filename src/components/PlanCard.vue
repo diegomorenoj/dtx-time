@@ -52,7 +52,7 @@
         default: () => ({}),
       },
     },
-  }
+  };
 </script>
 
 <style lang="sass">

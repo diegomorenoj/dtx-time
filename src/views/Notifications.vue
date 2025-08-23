@@ -389,14 +389,14 @@
 
     computed: {
       parsedDirection () {
-        return this.direction.split(' ')
+        return this.direction.split(' ');
       },
     },
 
     methods: {
       randomColor () {
-        this.color = this.colors[Math.floor(Math.random() * this.colors.length)]
+        this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
       },
     },
-  }
+  };
 </script>

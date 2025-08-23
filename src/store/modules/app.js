@@ -8,13 +8,6 @@ const state = {
   mini: false,
   items: [
     {
-      title: 'MANUAL',
-      icon: 'mdi-book',
-      href: '/pdf/manual_dtx.pdf',
-      permit: 'INDIVIDUAL_REPORT',
-      external: false,
-    },
-    {
       title: 'Informe Individual',
       icon: 'mdi-book-open',
       to: '/',
@@ -31,6 +24,13 @@ const state = {
       icon: 'mdi-map-marker-radius',
       to: '/config/trainingrequests/',
       permit: 'MENU_TRAININGS',
+    },
+    {
+      title: 'Manual de Aprobaciones',
+      icon: 'mdi-book',
+      href: '/pdf/manual_aprobacion.pdf',
+      permit: 'APPROVAL_MANUAL',
+      external: false,
     },
     {
       title: 'Cursos',

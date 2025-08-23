@@ -57,5 +57,5 @@
 </template>
 
 <script>
-  export default { name: 'LockView' }
+  export default { name: 'LockView' };
 </script>

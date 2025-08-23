@@ -6,7 +6,7 @@
 
 <script>
   // Styles
-  import '@/styles/overrides.sass'
+  import '@/styles/overrides.sass';
 
   export default {
     name: 'App',
@@ -19,5 +19,5 @@
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       ],
     },
-  }
+  };
 </script>

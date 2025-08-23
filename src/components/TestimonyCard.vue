@@ -52,5 +52,5 @@
       blurb: String,
       handle: String,
     },
-  }
+  };
 </script>
