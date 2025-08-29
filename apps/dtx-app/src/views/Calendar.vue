@@ -1,0 +1,137 @@
+<template>
+  <v-container
+    id="calendar-view"
+    fluid
+    tag="section"
+  >
+    <view-intro heading="Calendar">
+      The calendar component is used to display information in a daily, weekly, monthly, or category view.
+    </view-intro>
+
+    <v-row justify="center">
+      <v-col
+        cols="12"
+        md="10"
+      >
+        <v-card>
+          <v-toolbar flat>
+            <v-toolbar-title>August 2019</v-toolbar-title>
+
+            <v-spacer />
+
+            <calendar-btn
+              v-for="(t, i) in types"
+              :key="i"
+              @click="type = t"
+            >
+              {{ t }}
+            </calendar-btn>
+
+            <v-spacer />
+
+            <calendar-btn @click="$refs.calendar.prev()">
+              <v-icon>mdi-chevron-left</v-icon>
+            </calendar-btn>
+
+            <calendar-btn @click="$refs.calendar.next()">
+              <v-icon>mdi-chevron-right</v-icon>
+            </calendar-btn>
+          </v-toolbar>
+
+          <v-sheet
+            height="400"
+            elevation="0"
+            class="pa-3"
+          >
+            <v-calendar
+              ref="calendar"
+              v-model="calendar"
+              :events="events"
+              class="elevation-0"
+              :type="type"
+              event-color="primary"
+              now="2019-01-08"
+            />
+          </v-sheet>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
+
+<script>
+  // Components
+  import AppBtn from '@/components/app/Btn';
+
+  export default {
+    name: 'CalendarView',
+
+    components: {
+      CalendarBtn: {
+        name: 'CalendarBtn',
+
+        render (h) {
+          return h(AppBtn, {
+            staticClass: 'mx-1 text-lowercase px-4',
+            props: {
+              color: 'secondary',
+              minWidth: 0,
+              elevation: 0,
+              rounded: true,
+            },
+          }, this.$slots.default);
+        },
+      },
+    },
+
+    data: () => ({
+      calendar: '2019-01-08',
+      disabled: true,
+      events: [
+        {
+          name: 'Vacation',
+          start: '2018-12-30',
+          end: '2019-01-02',
+        },
+        {
+          name: 'Meeting',
+          start: '2019-01-07',
+        },
+        {
+          name: '30th Birthday',
+          start: '2019-01-03',
+        },
+        {
+          name: 'New Year',
+          start: '2019-01-01',
+        },
+        {
+          name: 'Conference',
+          start: '2019-01-21',
+        },
+        {
+          name: 'Hackathon',
+          start: '2019-01-30',
+          end: '2019-02-01',
+        },
+      ],
+      focus: '',
+      type: 'month',
+      types: [
+        'month',
+        'week',
+        'day',
+      ],
+    }),
+  };
+</script>
+
+<style lang="sass">
+  #calendar
+    .v-calendar-weekly__day:last-child,
+    .v-calendar-weekly__head-weekday:last-child
+      border-right: none
+
+    .v-calendar-weekly__week:last-child .v-calendar-weekly__day
+      border-bottom: none
+</style>
