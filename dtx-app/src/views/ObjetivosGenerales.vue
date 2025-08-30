@@ -1063,26 +1063,35 @@
       validateObjetive (data) {
         this.validationErrors = [];
 
+        if (!data || data.length === 0) {
+          this.validationErrors.push('El archivo Excel está vacío o no se pudo leer correctamente.');
+          return { isValid: false, errors: this.validationErrors };
+        }
+
+        console.log('Datos del Excel leídos:', data);
+        console.log('Primera fila:', data[0]);
+        console.log('Claves disponibles:', Object.keys(data[0] || {}));
+
         const columnsToCheck = [
           {
             key: 'user_email',
-            validation: (val) => typeof val === 'string',
-            typeDescription: 'String',
+            validation: (val) => typeof val === 'string' && val.trim() !== '',
+            typeDescription: 'String (email)',
           },
           {
             key: 'start_date',
-            validation: (val) => typeof val === 'string',
-            typeDescription: 'String',
+            validation: (val) => typeof val === 'string' && val.trim() !== '',
+            typeDescription: 'String (fecha)',
           },
           {
             key: 'end_date',
-            validation: (val) => typeof val === 'string',
-            typeDescription: 'String',
+            validation: (val) => typeof val === 'string' && val.trim() !== '',
+            typeDescription: 'String (fecha)',
           },
           {
             key: 'hours',
-            validation: (val) => !isNaN(parseFloat(val)) && isFinite(val),
-            typeDescription: 'Numérico',
+            validation: (val) => !isNaN(parseFloat(val)) && isFinite(val) && parseFloat(val) > 0,
+            typeDescription: 'Numérico (mayor a 0)',
           },
         ];
 
@@ -1090,10 +1099,10 @@
           const item = data[index];
           const rowNumber = index + 2;
 
-          for (const col of columnsToCheck) {
-            const value = item[col.key];
-            if (value === null || value === undefined || !col.validation(value)) {
-              const error = `Fila ${rowNumber}: Error en la columna '${col.key}'. El campo no puede estar vacío y debe ser del tipo '${col.typeDescription}'.`;
+          for (const column of columnsToCheck) {
+            const value = item[column.key];
+            if (value === null || value === undefined || value === '' || !column.validation(value)) {
+              const error = `Fila ${rowNumber}: Error en la columna '${column.key}'. El campo no puede estar vacío y debe ser del tipo '${column.typeDescription}'. Valor encontrado: '${value}'`;
               this.validationErrors.push(error);
               return { isValid: false, errors: this.validationErrors };
             }

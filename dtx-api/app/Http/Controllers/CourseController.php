@@ -132,52 +132,37 @@ class CourseController extends Controller
         $name = $input['name'] === null ? '%%' : '%' . $input['name'] . '%';
         $specialty_id = $input['specialty_id'] === null ? '%%' : '%' . $input['specialty_id'] . '%';
         $category = $input['category'] === null ? '%%' : '%' . $input['category'] . '%';
-        $status_id = $input['status_id'] === null ? '%%' : $input['status_id'];
+        $status_id = isset($input['status_id']) ? $input['status_id'] : '%%';
 
         if ($input['range'] !== null) {
-            if ($input['specialty_id'] !== null) {
-                $courses = DB::table('courses AS c')
-                    ->join('parameters AS p', 'p.id', '=', 'c.status_id')
-                    ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
-                    ->select(
-                        'c.*',
-                        'p.name AS status_name',
-                        'pv.name AS provider_name',
-                        DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date'),
-                        DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date'),
-                        DB::raw('null AS users'),
-                        DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count'),
-                        DB::raw('"app" AS origin'),
-                        DB::raw('null AS specialty_name')
-                    )
-                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
-                    ->whereRaw('c.specialty_id LIKE "' . $specialty_id . '"')
-                    ->whereRaw('c.category LIKE "' . $category . '"')
-                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
-                    ->orderBy('c.start_date', 'desc')
-                    ->get();
-            } else {
-                $courses = DB::table('courses AS c')
-                    ->join('parameters AS p', 'p.id', '=', 'c.status_id')
-                    ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
-                    ->select(
-                        'c.*',
-                        'p.name AS status_name',
-                        'pv.name AS provider_name',
-                        DB::raw('DATE_FORMAT(c.start_date,"%b %d de %Y") AS date'),
-                        DB::raw('null AS users'),
-                        DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count'),
-                        DB::raw('"app" AS origin'),
-                        DB::raw('null AS specialty_name')
-                    )
-                    ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
-                    ->whereRaw('(UPPER(c.name) LIKE UPPER("' . $name . '") OR UPPER(c.shortname) LIKE UPPER("' . $name . '"))')
-                    ->whereRaw('c.category LIKE "' . $category . '"')
-                    ->whereRaw('c.status_id LIKE "' . $status_id . '"')
-                    ->orderBy('c.start_date', 'desc')
-                    ->get();
-            }
+            $courses = DB::table('courses AS c')
+                ->join('parameters AS p', 'p.id', '=', 'c.status_id')
+                ->join('providers AS pv', 'pv.id', '=', 'c.provider_id')
+                ->select(
+                    'c.*',
+                    'p.name AS status_name',
+                    'pv.name AS provider_name',
+                    DB::raw('DATE_FORMAT(c.start_date,"%d/%m/%Y") AS date'),
+                    DB::raw('DATE_FORMAT(c.end_date,"%d/%m/%Y") AS end_date'),
+                    DB::raw('null AS users'),
+                    DB::raw('(SELECT COUNT(*) FROM user_courses uc WHERE uc.course_id = c.id) AS users_count'),
+                    DB::raw('"app" AS origin'),
+                    DB::raw('null AS specialty_name')
+                )
+                ->whereRaw("DATE_FORMAT(c.start_date,'%Y-%m-%d') BETWEEN '" . $input['range'][0] . "' AND '" . $input['range'][1] . "'")
+                ->where(function ($query) use ($name) {
+                    $query->whereRaw('UPPER(c.name) LIKE UPPER("' . $name . '")')
+                          ->orWhereRaw('UPPER(c.shortname) LIKE UPPER("' . $name . '")');
+                })
+                ->where(function ($query) use ($specialty_id) {
+                    if ($specialty_id !== '%%') {
+                        $query->where('c.specialty_id', $specialty_id);
+                    }
+                })
+                ->whereRaw('c.category LIKE "' . $category . '"')
+                ->whereRaw('c.status_id LIKE "' . $status_id . '"')
+                ->orderBy('c.start_date', 'desc')
+                ->get();
         } else {
             if ($input['specialty_id'] !== null) {
                 $courses = DB::table('courses AS c')
@@ -344,7 +329,7 @@ class CourseController extends Controller
                         ) AS cur
                         LEFT JOIN " . $bd_local . ".specialties s ON s.id = cur.specialty_id
                     WHERE 
-                        DATE_FORMAT(cur.created_at,'%Y-%m-%d') BETWEEN ? AND ?
+                        DATE_FORMAT(cur.start_date,'%Y-%m-%d') BETWEEN ? AND ?
                         AND UPPER(cur.name)  LIKE UPPER(?)
                         AND cur.category LIKE ?
                         AND cur.status_id LIKE ?
@@ -403,7 +388,7 @@ class CourseController extends Controller
                         ) AS cur
                         LEFT JOIN " . $bd_local . ".specialties s ON s.id = cur.specialty_id
                     WHERE 
-                        DATE_FORMAT(cur.created_at,'%Y-%m-%d') BETWEEN ? AND ?
+                        DATE_FORMAT(cur.start_date,'%Y-%m-%d') BETWEEN ? AND ?
                         AND UPPER(cur.name)  LIKE UPPER(?)
                         AND cur.category LIKE ?
                         AND cur.status_id LIKE ?

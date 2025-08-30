@@ -28,6 +28,17 @@ class ObjectiveImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
+        // Log para debugging
+        Log::info('Fila procesada:', $row);
+        
+        // Verificar que existe la columna user_email
+        if (!isset($row['user_email']) || empty($row['user_email'])) {
+            $msg = "La columna 'user_email' no está presente o está vacía";
+            $this->notFoundRows[] = $msg;
+            Log::error($msg, ['row' => $row]);
+            return null;
+        }
+
         $user = User::where('email', $row['user_email'])->first();
 
         if (!$user) {
@@ -37,19 +48,23 @@ class ObjectiveImport implements ToModel, WithHeadingRow
             return null; // Retorna null para continuar con la siguiente fila.
         }
 
-        // Verificar si el specialty_id existe en la base de datos
-        if (isset($row['specialty_id']) && !Specialty::find($row['specialty_id'])) {
-            $msg = "No se encontró la especialidad con ID {$row['specialty_id']}";
-            $this->notFoundRows[] = $msg;
-            Log::error($msg);
-            return null; // Retorna null para continuar con la siguiente fila.
+        // Manejar specialty_id como opcional
+        $specialtyId = null;
+        if (isset($row['specialty_id']) && !empty($row['specialty_id'])) {
+            if (!Specialty::find($row['specialty_id'])) {
+                $msg = "No se encontró la especialidad con ID {$row['specialty_id']}";
+                $this->notFoundRows[] = $msg;
+                Log::error($msg);
+                return null; // Retorna null para continuar con la siguiente fila.
+            }
+            $specialtyId = $row['specialty_id'];
         }        
      
         $attributes = [
             'user_id'         => $user->id,
             'start_date'         => $row['start_date'],
             'end_date'     => $row['end_date'],
-            'specialty_id' => $row['specialty_id'],
+            'specialty_id' => $specialtyId,
             'hours'        => $row['hours'],
             'area'   => $user->area,
             'position'   => $user->position,
@@ -58,16 +73,13 @@ class ObjectiveImport implements ToModel, WithHeadingRow
         
 
 
-        // Intenta actualizar el registro con 'code' dado, si no existe, lo crea
-        //return Objective::updateOrCreate(['user_id' => $row['user_id']], $attributes);
-
         // Intenta actualizar el registro con 'user_id', 'start_date', y 'end_date' dados, si no existe, lo crea
         return Objective::updateOrCreate(
             [
                 'user_id' => $user->id,
                 'start_date' => $row['start_date'],
                 'end_date' => $row['end_date'],
-                'specialty_id' => $row['specialty_id']
+                'specialty_id' => $specialtyId
             ], 
             $attributes
         );
